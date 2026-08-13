@@ -142,8 +142,154 @@ const TESTIMONIALS = [
 ] as const;
 
 const NAV_ITEMS = ["Platform", "Markets", "Research", "Education", "About"] as const;
-const FOOTER_CATEGORIES = ["Platform", "Markets", "Company", "Legal"] as const;
-const FOOTER_LINKS = ["Overview", "Features", "Pricing", "Documentation"] as const;
+
+// Platform tabs: web / mobile / api / desktop
+const PLATFORM_TABS = [
+  {
+    key: "web",
+    label: "Web Terminal",
+    title: "Trade from any browser, zero install",
+    desc: "A full institutional terminal that runs entirely in-browser — charting, order routing, and portfolio tools load in under two seconds and sync instantly across every device you're signed into.",
+    image: "/images/dashboard-preview.jpg",
+    points: ["No download required", "Auto-saves layouts & watchlists", "Runs on any OS"],
+  },
+  {
+    key: "mobile",
+    label: "Mobile App",
+    title: "Your desk, in your pocket",
+    desc: "Place, modify, and close trades with the same execution engine as the desktop terminal. Push alerts fire the moment your price levels are hit, even with the app closed.",
+    image: "/images/1893.jpg",
+    points: ["Biometric login", "Real-time push alerts", "One-tap order execution"],
+  },
+  {
+    key: "api",
+    label: "API & Algo",
+    title: "Build on top of the platform",
+    desc: "A documented REST and WebSocket API for teams running systematic strategies — historical tick data, sub-50ms order acknowledgement, and sandbox keys issued instantly.",
+    image: "/images/stock_market_bg_vctr.jpg",
+    points: ["REST + WebSocket streams", "Free sandbox environment", "Python & Node SDKs"],
+  },
+  {
+    key: "desktop",
+    label: "Desktop Suite",
+    title: "Built for multi-monitor workflows",
+    desc: "A native Windows and macOS application with detachable chart windows, hotkey trading, and Level II depth-of-market panels for traders running four screens or more.",
+    image: "/images/Commodities.jpg",
+    points: ["Detachable multi-chart layout", "Hotkey order entry", "Level II market depth"],
+  },
+] as const;
+
+const EDUCATION_RESOURCES = [
+  {
+    title: "Trading Academy",
+    level: "Beginner",
+    desc: "Self-paced video course covering order types, leverage, and risk management fundamentals — 6 modules, certificate on completion.",
+    meta: "6 modules · 3h 20m",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3L2 8l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M6 10v6c0 1.5 2.7 3 6 3s6-1.5 6-3v-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    title: "Live Webinars",
+    level: "All levels",
+    desc: "Weekly sessions with senior market analysts breaking down live charts, macro events, and Q&A on your open positions.",
+    meta: "Every Thursday · 5pm IST",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.7"/>
+        <path d="M9 21h6M12 17v4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    title: "Market Analysis",
+    level: "Intermediate",
+    desc: "Daily written briefings and technical setups across forex, indices, and crypto from our in-house research desk.",
+    meta: "Published daily",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 19h16M6 19V9m6 10V5m6 14v-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    title: "Strategy Guides",
+    level: "Advanced",
+    desc: "Downloadable playbooks on hedging, scalping, and swing strategies, with backtested entry and exit criteria.",
+    meta: "24 guides · PDF & video",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 4h11l5 5v11a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 13h6M9 17h6M9 9h2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+] as const;
+
+const FOOTER_COLUMNS = [
+  {
+    heading: "Platform",
+    links: ["Web Terminal", "Mobile App", "API & Algo Trading", "Desktop Suite", "System Status"],
+  },
+  {
+    heading: "Markets",
+    links: ["Forex", "Stock CFDs", "Crypto", "Commodities", "Indices"],
+  },
+  {
+    heading: "Education",
+    links: ["Trading Academy", "Webinars", "Market Analysis", "Strategy Guides", "Glossary"],
+  },
+  {
+    heading: "Company",
+    links: ["About Us", "Careers", "Press", "Partners", "Contact"],
+  },
+  {
+    heading: "Legal",
+    links: ["Terms of Service", "Privacy Policy", "Risk Disclosure", "AML Policy", "Regulatory Info"],
+  },
+] as const;
+
+const SOCIAL_LINKS = [
+  {
+    name: "X",
+    href: "#",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    ),
+  },
+  {
+    name: "LinkedIn",
+    href: "#",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.35-1.85 3.59 0 4.25 2.36 4.25 5.44zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56z"/>
+      </svg>
+    ),
+  },
+  {
+    name: "YouTube",
+    href: "#",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M23 12s0-3.6-.46-5.31a2.9 2.9 0 00-2.05-2.05C18.78 4.18 12 4.18 12 4.18s-6.78 0-8.49.46A2.9 2.9 0 001.46 6.7C1 8.4 1 12 1 12s0 3.6.46 5.31a2.9 2.9 0 002.05 2.05c1.71.46 8.49.46 8.49.46s6.78 0 8.49-.46a2.9 2.9 0 002.05-2.05C23 15.6 23 12 23 12zM9.75 15.5v-7l6 3.5z"/>
+      </svg>
+    ),
+  },
+  {
+    name: "Telegram",
+    href: "#",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M21.9 4.3L18.6 20c-.25 1.1-.9 1.37-1.83.86l-5.06-3.73-2.44 2.35c-.27.27-.5.5-1.02.5l.36-5.16 9.38-8.47c.41-.36-.09-.56-.63-.2L6.1 12.6l-5-1.56c-1.09-.34-1.1-1.09.23-1.61L20.5 3.02c.9-.34 1.7.2 1.4 1.28z"/>
+      </svg>
+    ),
+  },
+] as const;
 
 // ============================================
 // CUSTOM HOOKS
@@ -678,6 +824,316 @@ const HeroSection = memo(function HeroSection({
 
 HeroSection.displayName = "HeroSection";
 
+const PlatformSection = memo(function PlatformSection() {
+  const [activeTab, setActiveTab] = useState<string>(PLATFORM_TABS[0].key);
+  const active = PLATFORM_TABS.find((t) => t.key === activeTab) ?? PLATFORM_TABS[0];
+
+  return (
+    <section id="platform" className="py-20 sm:py-28 px-5 sm:px-6 lg:px-8 bg-[#0f1117] relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.015]">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }}
+        />
+      </div>
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-red-500/[0.04] rounded-full blur-3xl" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-12 sm:mb-14">
+          <p className="text-xs tracking-[0.2em] uppercase text-red-400 mb-3 font-medium">Platform</p>
+          <h2 className="font-bold text-3xl sm:text-4xl lg:text-5xl mb-4 text-white">
+            One Account, Every Way to Trade
+          </h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+            The same execution engine and live positions follow you from browser to phone to your own code.
+          </p>
+        </div>
+
+        {/* Tab selector */}
+        <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
+          {PLATFORM_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 sm:px-5 py-2.5 rounded-[5px] text-[13px] font-medium transition-all duration-300 border ${
+                activeTab === tab.key
+                  ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20'
+                  : 'bg-[#1a1d25] border-[#2a2d35] text-slate-400 hover:text-white hover:border-red-500/30'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="relative rounded-[5px] overflow-hidden border border-[#2a2d35] shadow-2xl shadow-black/50 group order-2 lg:order-1">
+            <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+            <div className="aspect-[16/10] bg-[#1a1d25] relative">
+              <Image
+                key={active.image}
+                src={active.image}
+                alt={active.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+            <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-[5px] z-20">
+              {active.label}
+            </div>
+          </div>
+
+          <div className="order-1 lg:order-2" key={active.key}>
+            <h3 className="font-bold text-2xl sm:text-3xl mb-4 text-white animate-fadeIn">
+              {active.title}
+            </h3>
+            <p className="text-slate-400 mb-6 leading-relaxed animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+              {active.desc}
+            </p>
+            <ul className="space-y-3 mb-8">
+              {active.points.map((point, i) => (
+                <li
+                  key={point}
+                  className="flex items-center gap-3 text-sm text-slate-300 animate-fadeIn"
+                  style={{ animationDelay: `${0.15 + i * 0.08}s` }}
+                >
+                  <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/Login"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm rounded-[5px] transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:scale-105 active:scale-95"
+            >
+              Explore {active.label}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out both;
+        }
+      `}</style>
+    </section>
+  );
+});
+
+PlatformSection.displayName = "PlatformSection";
+
+const EducationSection = memo(function EducationSection() {
+  return (
+    <section id="education" className="py-20 sm:py-28 px-5 sm:px-6 lg:px-8 bg-[#13161c] relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.015]">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }}
+        />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12 sm:mb-14">
+          <div>
+            <p className="text-xs tracking-[0.2em] uppercase text-red-400 mb-3 font-medium">Education</p>
+            <h2 className="font-bold text-3xl sm:text-4xl lg:text-5xl text-white mb-4">
+              Learn Before You Leverage
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base max-w-xl">
+              Free courses, live sessions, and research built by our trading desk — for every stage from first trade to full-time.
+            </p>
+          </div>
+          <Link
+            href="/Login"
+            className="hidden sm:inline-flex items-center gap-2 text-sm text-white hover:text-red-400 transition-colors duration-200 group whitespace-nowrap"
+          >
+            View all resources
+            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {EDUCATION_RESOURCES.map((item, index) => (
+            <div
+              key={item.title}
+              className="group bg-[#1a1d25] border border-[#2a2d35] hover:border-red-500/30 rounded-[5px] p-5 sm:p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-500/5"
+              style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both` }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 flex items-center justify-center rounded-[5px] bg-red-500/10 text-red-400 group-hover:bg-red-500/20 group-hover:scale-110 transition-all duration-300">
+                  {item.icon}
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 bg-white/[0.03] border border-white/5 px-2.5 py-1 rounded-[5px]">
+                  {item.level}
+                </span>
+              </div>
+              <h3 className="text-base font-semibold mb-2 text-white">{item.title}</h3>
+              <p className="text-sm text-slate-500 mb-5 leading-relaxed">{item.desc}</p>
+              <div className="flex items-center justify-between pt-4 border-t border-[#2a2d35] group-hover:border-red-500/20 transition-colors duration-500">
+                <span className="text-[11px] text-slate-600">{item.meta}</span>
+                <Link
+                  href="/Login"
+                  className="text-xs font-medium text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
+                >
+                  Start
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Link
+          href="/Login"
+          className="sm:hidden mt-8 inline-flex items-center gap-2 text-sm text-white hover:text-red-400 transition-colors duration-200 group"
+        >
+          View all resources
+          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+    </section>
+  );
+});
+
+EducationSection.displayName = "EducationSection";
+
+const Footer = memo(function Footer() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubscribed(true);
+    setEmail("");
+  }, [email]);
+
+  return (
+    <footer className="border-t border-white/[0.04] bg-[#0f1117]">
+      {/* Newsletter strip */}
+      <div className="border-b border-white/[0.04]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div className="text-center lg:text-left">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-1">Get market insight in your inbox</h3>
+            <p className="text-sm text-slate-500">One email a week. No noise, unsubscribe anytime.</p>
+          </div>
+          <form onSubmit={handleSubscribe} className="flex w-full lg:w-auto max-w-sm gap-2">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              aria-label="Email address"
+              className="flex-1 lg:w-64 bg-[#1a1d25] border border-[#2a2d35] focus:border-red-500/50 outline-none text-sm text-white placeholder:text-slate-600 rounded-[5px] px-4 py-3 transition-colors"
+            />
+            <button
+              type="submit"
+              className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-medium text-sm rounded-[5px] transition-all duration-200 whitespace-nowrap hover:scale-105 active:scale-95"
+            >
+              {subscribed ? "Subscribed ✓" : "Subscribe"}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
+          {/* Brand column */}
+          <div className="col-span-2 lg:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-1.5 mb-4">
+              <span className="font-bold text-lg tracking-tight text-white">
+                EXPERT<span className="text-red-500">FX</span>
+              </span>
+            </Link>
+            <p className="text-xs text-slate-500 leading-relaxed mb-5 max-w-[220px]">
+              Institutional-grade execution for retail and professional traders across forex, equities, crypto, and commodities.
+            </p>
+            <div className="flex items-center gap-2">
+              {SOCIAL_LINKS.map((social) => (
+                <Link
+                  key={social.name}
+                  href={social.href}
+                  aria-label={social.name}
+                  className="w-8 h-8 flex items-center justify-center rounded-[5px] bg-[#1a1d25] border border-[#2a2d35] text-slate-500 hover:text-white hover:border-red-500/30 hover:bg-[#1e212a] transition-all duration-200"
+                >
+                  {social.icon}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {FOOTER_COLUMNS.map((column) => (
+            <div key={column.heading}>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">{column.heading}</h4>
+              <ul className="space-y-2.5">
+                {column.links.map((item) => (
+                  <li key={item}>
+                    <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+                      {item}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Regulatory badges */}
+        <div className="flex flex-wrap items-center gap-3 pb-8 border-b border-[#2a2d35]">
+          {["FCA Regulated", "ASIC Licensed", "CySEC Authorized", "256-bit SSL Encryption"].map((badge) => (
+            <span
+              key={badge}
+              className="text-[11px] text-slate-500 bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] px-3 py-1.5 flex items-center gap-1.5"
+            >
+              <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {badge}
+            </span>
+          ))}
+        </div>
+
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-slate-600">© 2026 ExpertFX. All rights reserved.</span>
+          </div>
+          <p className="text-[11px] text-slate-600 text-center max-w-2xl leading-relaxed">
+            Trading CFDs and leveraged products carries a high level of risk and may not be suitable for all investors.
+            Past performance does not guarantee future results. Please ensure you fully understand the risks before trading.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+});
+
+Footer.displayName = "Footer";
+
 // ============================================
 // MAIN COMPONENT
 // ============================================
@@ -780,6 +1236,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <PlatformSection />
+
       {/* Markets Section */}
       <section id="markets" className="py-16 sm:py-20 px-5 sm:px-6 lg:px-8 bg-[#13161c] relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.01]">
@@ -860,6 +1318,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <EducationSection />
 
       {/* Testimonials Section */}
       <section className="py-20 sm:py-28 px-5 sm:px-6 lg:px-8 bg-[#0f1117] relative overflow-hidden">
@@ -1055,39 +1515,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.04] bg-[#0f1117]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 sm:py-14">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
-            {FOOTER_CATEGORIES.map((category) => (
-              <div key={category}>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">{category}</h4>
-                <ul className="space-y-2.5">
-                  {FOOTER_LINKS.map((item) => (
-                    <li key={item}>
-                      <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
-                        {item}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-8 border-t border-[#2a2d35] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-white hover:scale-105 transition-transform">
-                EXPERT<span className="text-red-500">FX</span>
-              </span>
-              <span className="text-xs text-slate-600">© 2026</span>
-            </div>
-            <p className="text-[11px] text-slate-600 text-center">
-              Trading involves significant risk. Past performance does not guarantee future results.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <style jsx>{`
         @keyframes fadeIn {
