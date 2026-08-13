@@ -6,22 +6,23 @@ import bcrypt from "bcryptjs";
 const DEFAULT_MAX_MONTHS = 24;
 
 async function generateUserCode(): Promise<string> {
+  const PREFIX = "EXFX";
   let code = "";
   let isUnique = false;
 
   while (!isUnique) {
     const lastUser = await User.findOne(
-      { userCode: /^ZENO\d+$/ },
+      { userCode: new RegExp(`^${PREFIX}\\d+$`) },
       { userCode: 1 }
     ).sort({ userCode: -1 });
 
     let nextNum = 1;
     if (lastUser?.userCode) {
-      const lastNum = parseInt(lastUser.userCode.replace("ZENO", ""), 10);
+      const lastNum = parseInt(lastUser.userCode.replace(PREFIX, ""), 10);
       nextNum = lastNum + 1;
     }
 
-    code = `ZENO${String(nextNum).padStart(3, "0")}`;
+    code = `${PREFIX}${String(nextNum).padStart(3, "0")}`;
     const existing = await User.findOne({ userCode: code });
     if (!existing) isUnique = true;
   }

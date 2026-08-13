@@ -650,7 +650,8 @@ function Shell({ children }: { children: React.ReactNode }) {
             <div className="efx-brandrow">
               <div className="efx-mark"><ShieldCheck size={17} /></div>
               <div>
-                <p className="efx-brand-word">EXPERT<em>FX</em></p>
+                {/* ब्रांड नाम अब EXPARTFX है */}
+                <p className="efx-brand-word">EXPART<em>FX</em></p>
                 <p className="efx-brand-sub">Referred account opening</p>
               </div>
             </div>
