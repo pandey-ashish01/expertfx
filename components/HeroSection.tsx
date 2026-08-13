@@ -92,7 +92,7 @@ const SERVICES = [
     title: "Crypto Trading",
     desc: "24/7 cryptocurrency trading with institutional-grade security.",
     features: ["50+ Crypto Pairs", "Cold Storage Security", "Instant Withdrawals"],
-    image: "/images/crypto.jpg",
+    image: "/images/stock_market_bg_vctr.jpg",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
