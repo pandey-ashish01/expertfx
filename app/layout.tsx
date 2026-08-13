@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/ModeToggle";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,8 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ExpertFX",
-  description: "ExpertFX",
+  title: "Online Forex & CFD Trading | Global Markets",
+  description:
+    "A Trusted Global Broker Offering Forex, Stocks, Indices & Commodities Trading. Low Spreads, Fast Execution, Multiple Platforms. Start Trading Now.",
+  robots: {
+    index: false,
+    follow: false,
+  },
   icons: {
     icon: "/fx.svg",
   },
