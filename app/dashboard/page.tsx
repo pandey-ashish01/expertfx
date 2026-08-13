@@ -14,7 +14,7 @@ import {
 import { Toaster, toast } from "sonner";
 import ProfitDistributionPanel from "@/components/ProfitDistribution";
 
-// ---------- Interfaces (पहले जैसे ही हैं) ----------
+// ---------- Interfaces ----------
 interface Payment {
   _id: string;
   amount: number;
@@ -231,12 +231,12 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
             Approve or reject user investments
           </p>
         </div>
-        <button onClick={fetchPayments} className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
+        <button onClick={fetchPayments} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
           Refresh
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 md:gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
         {[
           { label: "Total",    value: payments.length,                                      color: "from-red-500 to-red-600"       },
           { label: "Pending",  value: pendingCount,                                         color: "from-amber-500 to-orange-500"    },
@@ -244,7 +244,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
         ].map((s) => (
           <div key={s.label} className={`${card} p-3 md:p-4`}>
             <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{s.label}</p>
-            <p className={`text-xl md:text-2xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value}</p>
+            <p className={`text-lg md:text-2xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -254,7 +254,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-xl text-xs md:text-sm font-semibold capitalize transition-all ${
+            className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold capitalize transition-all ${
               filter === f ? "bg-red-500 text-white" : isDarkMode ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -309,7 +309,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                     {new Date(payment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
-                <button onClick={() => window.open(payment.screenshot, "_blank")} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs md:text-sm transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
+                <button onClick={() => window.open(payment.screenshot, "_blank")} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs md:text-sm transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
                   <Eye className="w-3.5 h-3.5" /> View
                 </button>
               </div>
@@ -318,7 +318,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                   <button
                     onClick={() => handleAction(payment.userId, payment._id, "approved")}
                     disabled={actionLoading === payment._id}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-2.5 rounded-xl transition-all disabled:opacity-50 text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
                   >
                     {actionLoading === payment._id ? <div className="w-4 h-4 border-2 border-t-transparent border-emerald-400 rounded-full animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                     Approve
@@ -326,7 +326,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                   <button
                     onClick={() => handleAction(payment.userId, payment._id, "rejected")}
                     disabled={actionLoading === payment._id}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-2.5 rounded-xl transition-all disabled:opacity-50 text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>
@@ -420,11 +420,11 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="font-bold text-sm truncate">{node.name}</p>
+                <p className="font-bold text-sm md:text-base truncate">{node.name}</p>
                 {isRoot && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">YOU</span>}
                 {node.userCode && <span className="font-mono text-xs text-red-400 flex-shrink-0">{node.userCode}</span>}
               </div>
-              <p className={`text-xs truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{node.mobile}</p>
+              <p className={`text-xs md:text-sm truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{node.mobile}</p>
             </div>
             {hasChildren && (
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${isDarkMode ? "bg-white/8 text-gray-300" : "bg-gray-100 text-gray-600"}`}>
@@ -475,7 +475,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
             {totalMembers} member{totalMembers !== 1 ? "s" : ""} in your network
           </p>
         </div>
-        <button onClick={fetchNetwork} className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
+        <button onClick={fetchNetwork} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
           Refresh
         </button>
       </div>
@@ -601,7 +601,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSelectedLevel(null)}
-            className={`p-2 rounded-xl flex-shrink-0 ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}
+            className={`p-2.5 rounded-xl flex-shrink-0 ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -741,7 +741,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
         </div>
         <button
           onClick={fetchStats}
-          className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+          className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
         >
           Refresh
         </button>
@@ -852,7 +852,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => setSelectedLevel(ls)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold transition-all ${
                             isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                           }`}
                         >
@@ -1159,7 +1159,7 @@ export default function DashboardPage() {
     <div className={bg}>
       <Toaster position="top-right" richColors closeButton />
 
-      {/* Mobile Header – only hamburger (no duplicate tabs) */}
+      {/* Mobile Header */}
       <div className={`md:hidden sticky top-0 z-50 ${isDarkMode ? "bg-[#080c14]/95 backdrop-blur-xl border-b border-white/5" : "bg-white/95 backdrop-blur-xl border-b border-gray-200"}`}>
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -1203,7 +1203,7 @@ export default function DashboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setIsMobileMenuOpen(false); }}
-                  className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all text-sm ${
+                  className={`flex items-center gap-3 w-full p-3.5 rounded-xl transition-all text-sm ${
                     activeTab === tab.id
                       ? "bg-red-500 text-white font-bold"
                       : isDarkMode ? "text-gray-300 hover:bg-white/5" : "text-gray-700 hover:bg-gray-50"
@@ -1214,7 +1214,7 @@ export default function DashboardPage() {
                 </button>
               ))}
               <div className={`pt-2 mt-2 border-t ${isDarkMode ? "border-white/10" : "border-gray-100"}`}>
-                <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 rounded-xl text-red-400 hover:bg-red-400/10 text-sm">
+                <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3.5 rounded-xl text-red-400 hover:bg-red-400/10 text-sm">
                   <LogOut className="w-4 h-4" /> Logout
                 </button>
               </div>
@@ -1286,12 +1286,12 @@ export default function DashboardPage() {
       <div className="space-y-4 md:space-y-5 max-w-4xl mx-auto">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Welcome back 👋</p>
+            <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Welcome back</p>
             <h1 className="text-lg md:text-3xl font-black mt-0.5 truncate">{user!.name}</h1>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {isAdmin && (
-              <button onClick={() => setActiveTab("admin")} className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-2 rounded-xl text-xs font-bold hover:bg-red-500/20 transition-all">
+              <button onClick={() => setActiveTab("admin")} className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-2.5 rounded-xl text-xs font-bold hover:bg-red-500/20 transition-all">
                 <ShieldCheck className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Admin</span>
               </button>
             )}
@@ -1411,7 +1411,7 @@ export default function DashboardPage() {
             <h1 className="text-lg md:text-2xl font-black">Investments</h1>
             <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>8% monthly · Up to 5,000 USDT</p>
           </div>
-          <button onClick={() => setShowAddPayment(!showAddPayment)} className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-3 md:px-4 py-2.5 rounded-xl text-xs md:text-sm flex-shrink-0">
+          <button onClick={() => setShowAddPayment(!showAddPayment)} className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-xs md:text-sm flex-shrink-0">
             <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Invest
           </button>
         </div>
@@ -1427,7 +1427,15 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Amount (USDT) *</label>
-                  <input type="number" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} className={input} placeholder="Min: 50 — Max: 5,000 USDT" min="50" max="5000" />
+                  <input
+                    type="number"
+                    value={paymentForm.amount}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                    className={input}
+                    placeholder="Min: 50 – Max: 5,000 USDT"
+                    min="50"
+                    max="5000"
+                  />
                   {amountVal >= 50 && amountVal <= 5000 && (
                     <div className={`mt-2 p-3 rounded-xl ${isDarkMode ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"}`}>
                       <div className="grid grid-cols-3 gap-2 text-center">
@@ -1441,7 +1449,13 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Note (Optional)</label>
-                  <input type="text" value={paymentForm.description} onChange={(e) => setPaymentForm({ ...paymentForm, description: e.target.value })} className={input} placeholder="Transaction note..." />
+                  <input
+                    type="text"
+                    value={paymentForm.description}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, description: e.target.value })}
+                    className={input}
+                    placeholder="Add a note or transaction ID"
+                  />
                 </div>
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Payment Screenshot *</label>
@@ -1456,7 +1470,7 @@ export default function DashboardPage() {
                       <div>
                         <CreditCard className="w-7 h-7 mx-auto mb-2 text-gray-500" />
                         <p className="text-xs text-gray-400 mb-2">Upload payment proof</p>
-                        <label className="bg-red-500 text-white px-4 py-2 rounded-lg cursor-pointer text-xs font-semibold hover:bg-red-600 transition-all inline-block">
+                        <label className="bg-red-500 text-white px-4 py-2.5 rounded-lg cursor-pointer text-xs font-semibold hover:bg-red-600 transition-all inline-block">
                           Choose File
                           <input type="file" accept="image/*" onChange={(e) => setPaymentForm({ ...paymentForm, screenshot: e.target.files?.[0] || null })} className="hidden" />
                         </label>
@@ -1535,7 +1549,7 @@ export default function DashboardPage() {
                           </div>
                           <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
                             Matures: {new Date(calc.maturityDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                            {calc.isMatured && <span className="text-red-400 ml-2 font-semibold">✓ Matured</span>}
+                            {calc.isMatured && <span className="text-red-400 ml-2 font-semibold">Matured</span>}
                           </p>
                         </div>
                       </div>
@@ -1574,11 +1588,15 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-lg md:text-2xl font-black">Profile</h1>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2 rounded-xl text-xs md:text-sm"><Edit2 className="w-3.5 h-3.5" /> Edit</button>
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+              <Edit2 className="w-3.5 h-3.5" /> Edit
+            </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2 rounded-xl text-xs md:text-sm"><Save className="w-3.5 h-3.5" /> Save</button>
-              <button onClick={() => setIsEditing(false)} className={`px-3 py-2 rounded-xl text-xs md:text-sm border ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
+              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+                <Save className="w-3.5 h-3.5" /> Save
+              </button>
+              <button onClick={() => setIsEditing(false)} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm border ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
             </div>
           )}
         </div>
@@ -1628,13 +1646,19 @@ export default function DashboardPage() {
                       onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                       className={input}
                     >
-                      <option value="">Select country</option>
+                      <option value="">Select your country</option>
                       {countries.map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
                   ) : (
-                    <input type="text" value={formData[key as keyof FormData]} onChange={(e) => setFormData({ ...formData, [key]: e.target.value })} className={input} />
+                    <input
+                      type="text"
+                      value={formData[key as keyof FormData]}
+                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                      className={input}
+                      placeholder={`Enter your ${label.toLowerCase()}`}
+                    />
                   )
                 ) : (
                   <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
@@ -1671,11 +1695,15 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-lg md:text-2xl font-black">Finance Details</h1>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2 rounded-xl text-xs md:text-sm"><Edit2 className="w-3.5 h-3.5" /> Edit</button>
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+              <Edit2 className="w-3.5 h-3.5" /> Edit
+            </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2 rounded-xl text-xs md:text-sm"><Save className="w-3.5 h-3.5" /> Save</button>
-              <button onClick={() => setIsEditing(false)} className={`px-3 py-2 rounded-xl text-xs md:text-sm border ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
+              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+                <Save className="w-3.5 h-3.5" /> Save
+              </button>
+              <button onClick={() => setIsEditing(false)} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm border ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
             </div>
           )}
         </div>
@@ -1714,7 +1742,7 @@ export default function DashboardPage() {
                       value={formData.walletAddress}
                       onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
                       className={input}
-                      placeholder="Wallet address"
+                      placeholder="e.g. 0x1234... or TXXXX..."
                     />
                   ) : (
                     <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
@@ -1736,7 +1764,7 @@ export default function DashboardPage() {
                   value={formData.mt5Email}
                   onChange={(e) => setFormData({ ...formData, mt5Email: e.target.value })}
                   className={input}
-                  placeholder="Your XM MT5 account email (different from login email)"
+                  placeholder="Your XM registered email address"
                 />
               ) : (
                 <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
@@ -1756,7 +1784,7 @@ export default function DashboardPage() {
                   value={formData.mt5Account}
                   onChange={(e) => setFormData({ ...formData, mt5Account: e.target.value })}
                   className={input}
-                  placeholder="Your MT5 account ID"
+                  placeholder="e.g. MT5-123456"
                 />
               ) : (
                 <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
@@ -1807,7 +1835,7 @@ export default function DashboardPage() {
               <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Your Referral Link</label>
               <div className={`flex items-center gap-2 p-3 rounded-xl mb-3 ${isDarkMode ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
                 <p className={`flex-1 text-xs truncate font-mono ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>{shareLink}</p>
-                <button onClick={handleCopyShareLink} className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0">
+                <button onClick={handleCopyShareLink} className="bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex-shrink-0">
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
