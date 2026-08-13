@@ -134,7 +134,7 @@ const TESTIMONIALS = [
   {
     name: "Sarah Okonkwo",
     role: "Independent Investor",
-    text: "Started with $1000, now managing a six-figure portfolio. ExpartFX gave me the edge.",
+    text: "Started with $1000, now managing a six‑figure portfolio. ExpartFX gave me the edge.",
     avatar: "/images/3911.jpg",
     rating: 5,
     company: "Okonkwo Investments",
@@ -143,15 +143,14 @@ const TESTIMONIALS = [
 
 const NAV_ITEMS = ["Platform", "Markets", "Research", "Education", "About"] as const;
 
-// Platform tabs: web / mobile / api / desktop
 const PLATFORM_TABS = [
   {
     key: "web",
     label: "Web Terminal",
     title: "Trade from any browser, zero install",
-    desc: "A full institutional terminal that runs entirely in-browser — charting, order routing, and portfolio tools load in under two seconds and sync instantly across every device you're signed into.",
+    desc: "A full institutional terminal that runs entirely in‑browser — charting, order routing, and portfolio tools load in under two seconds and sync instantly across every device you're signed into.",
     image: "/images/dashboard-preview.jpg",
-    points: ["No download required", "Auto-saves layouts & watchlists", "Runs on any OS"],
+    points: ["No download required", "Auto‑saves layouts & watchlists", "Runs on any OS"],
   },
   {
     key: "mobile",
@@ -159,23 +158,23 @@ const PLATFORM_TABS = [
     title: "Your desk, in your pocket",
     desc: "Place, modify, and close trades with the same execution engine as the desktop terminal. Push alerts fire the moment your price levels are hit, even with the app closed.",
     image: "/images/1893.jpg",
-    points: ["Biometric login", "Real-time push alerts", "One-tap order execution"],
+    points: ["Biometric login", "Real‑time push alerts", "One‑tap order execution"],
   },
   {
     key: "api",
     label: "API & Algo",
     title: "Build on top of the platform",
-    desc: "A documented REST and WebSocket API for teams running systematic strategies — historical tick data, sub-50ms order acknowledgement, and sandbox keys issued instantly.",
+    desc: "A documented REST and WebSocket API for teams running systematic strategies — historical tick data, sub‑50ms order acknowledgement, and sandbox keys issued instantly.",
     image: "/images/stock_market_bg_vctr.jpg",
     points: ["REST + WebSocket streams", "Free sandbox environment", "Python & Node SDKs"],
   },
   {
     key: "desktop",
     label: "Desktop Suite",
-    title: "Built for multi-monitor workflows",
-    desc: "A native Windows and macOS application with detachable chart windows, hotkey trading, and Level II depth-of-market panels for traders running four screens or more.",
+    title: "Built for multi‑monitor workflows",
+    desc: "A native Windows and macOS application with detachable chart windows, hotkey trading, and Level II depth‑of‑market panels for traders running four screens or more.",
     image: "/images/Commodities.jpg",
-    points: ["Detachable multi-chart layout", "Hotkey order entry", "Level II market depth"],
+    points: ["Detachable multi‑chart layout", "Hotkey order entry", "Level II market depth"],
   },
 ] as const;
 
@@ -183,7 +182,7 @@ const EDUCATION_RESOURCES = [
   {
     title: "Trading Academy",
     level: "Beginner",
-    desc: "Self-paced video course covering order types, leverage, and risk management fundamentals — 6 modules, certificate on completion.",
+    desc: "Self‑paced video course covering order types, leverage, and risk management fundamentals — 6 modules, certificate on completion.",
     meta: "6 modules · 3h 20m",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -207,7 +206,7 @@ const EDUCATION_RESOURCES = [
   {
     title: "Market Analysis",
     level: "Intermediate",
-    desc: "Daily written briefings and technical setups across forex, indices, and crypto from our in-house research desk.",
+    desc: "Daily written briefings and technical setups across forex, indices, and crypto from our in‑house research desk.",
     meta: "Published daily",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -232,23 +231,15 @@ const EDUCATION_RESOURCES = [
 const FOOTER_COLUMNS = [
   {
     heading: "Platform",
-    links: ["Web Terminal", "Mobile App", "API & Algo Trading", "Desktop Suite", "System Status"],
+    links: ["Web Terminal", "Mobile App", "API & Algo", "Desktop Suite", "System Status"],
   },
   {
     heading: "Markets",
     links: ["Forex", "Stock CFDs", "Crypto", "Commodities", "Indices"],
   },
   {
-    heading: "Education",
-    links: ["Trading Academy", "Webinars", "Market Analysis", "Strategy Guides", "Glossary"],
-  },
-  {
     heading: "Company",
     links: ["About Us", "Careers", "Press", "Partners", "Contact"],
-  },
-  {
-    heading: "Legal",
-    links: ["Terms of Service", "Privacy Policy", "Risk Disclosure", "AML Policy", "Regulatory Info"],
   },
 ] as const;
 
@@ -292,7 +283,7 @@ const SOCIAL_LINKS = [
 ] as const;
 
 // ============================================
-// CUSTOM HOOKS
+// CUSTOM HOOKS (unchanged)
 // ============================================
 
 function useCounter(end: string | number, duration = 2000) {
@@ -408,34 +399,33 @@ function usePartnerRotation(interval = 3000) {
 // COMPONENTS
 // ============================================
 
-const AnimatedStat = memo(function AnimatedStat({ 
-  value, 
-  label 
-}: { 
-  value: string | number; 
+const AnimatedStat = memo(function AnimatedStat({
+  value,
+  label,
+}: {
+  value: string | number;
   label: string;
 }) {
   const { count, elementRef } = useCounter(value);
 
   return (
     <div ref={elementRef} className="text-center">
-      <p className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight">
+      <p className="text-3xl sm:text-4xl font-bold text-white mb-1 tracking-tight">
         {count}
       </p>
-      <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
+      <p className="text-[11px] uppercase tracking-wider text-slate-500">{label}</p>
     </div>
   );
 });
-
 AnimatedStat.displayName = "AnimatedStat";
 
-const TrustBadge = memo(function TrustBadge({ 
-  icon, 
-  label, 
-  value 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
+const TrustBadge = memo(function TrustBadge({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
   value: string;
 }) {
   return (
@@ -450,24 +440,23 @@ const TrustBadge = memo(function TrustBadge({
     </div>
   );
 });
-
 TrustBadge.displayName = "TrustBadge";
 
-const Navigation = memo(function Navigation({ 
-  isScrolled, 
-  mobileMenuOpen, 
-  setMobileMenuOpen 
-}: { 
-  isScrolled: boolean; 
-  mobileMenuOpen: boolean; 
+const Navigation = memo(function Navigation({
+  isScrolled,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+}: {
+  isScrolled: boolean;
+  mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
 }) {
   return (
-    <nav 
+    <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-[#0f1117]/95 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/20' 
-          : 'bg-transparent'
+        isScrolled
+          ? "bg-[#0f1117]/95 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/20"
+          : "bg-transparent"
       }`}
       role="navigation"
       aria-label="Main navigation"
@@ -494,8 +483,8 @@ const Navigation = memo(function Navigation({
           </div>
 
           <div className="hidden md:flex items-center gap-5">
-            <Link 
-              href="/Login" 
+            <Link
+              href="/Login"
               className="text-[13px] text-slate-400 hover:text-white transition-colors duration-200"
             >
               Sign In
@@ -525,9 +514,9 @@ const Navigation = memo(function Navigation({
         </div>
       </div>
 
-      <div 
+      <div
         className={`md:hidden transition-all duration-300 overflow-hidden ${
-          mobileMenuOpen ? 'max-h-96 bg-[#0f1117]/98 backdrop-blur-xl border-b border-white/[0.06]' : 'max-h-0'
+          mobileMenuOpen ? "max-h-96 bg-[#0f1117]/98 backdrop-blur-xl border-b border-white/[0.06]" : "max-h-0"
         }`}
       >
         <div className="px-5 py-6 space-y-1">
@@ -542,10 +531,16 @@ const Navigation = memo(function Navigation({
             </Link>
           ))}
           <div className="pt-4 flex gap-3">
-            <Link href="/Login" className="flex-1 text-center px-4 py-3 border border-white/10 text-slate-400 text-sm rounded-[5px] hover:border-white/20 transition-all">
+            <Link
+              href="/Login"
+              className="flex-1 text-center px-4 py-3 border border-white/10 text-slate-400 text-sm rounded-[5px] hover:border-white/20 transition-all"
+            >
               Sign In
             </Link>
-            <Link href="/Login" className="flex-1 text-center px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-[5px]">
+            <Link
+              href="/Login"
+              className="flex-1 text-center px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-[5px]"
+            >
               Get Started
             </Link>
           </div>
@@ -554,14 +549,9 @@ const Navigation = memo(function Navigation({
     </nav>
   );
 });
-
 Navigation.displayName = "Navigation";
 
-const HeroSection = memo(function HeroSection({ 
-  mousePosition 
-}: { 
-  mousePosition: { x: number; y: number };
-}) {
+const HeroSection = memo(function HeroSection({ mousePosition }: { mousePosition: { x: number; y: number } }) {
   const [hoveredPartner, setHoveredPartner] = useState<number | null>(null);
   const currentPartnerIndex = usePartnerRotation();
 
@@ -569,23 +559,23 @@ const HeroSection = memo(function HeroSection({
     <section className="relative w-full min-h-screen flex items-center bg-[#0f1117] overflow-hidden">
       {/* Animated grid background */}
       <div className="absolute inset-0 opacity-[0.02]">
-        <div 
-          className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{
             backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '40px 40px',
+            backgroundSize: "40px 40px",
             transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`,
-            transition: 'transform 0.1s ease-out',
+            transition: "transform 0.1s ease-out",
           }}
         />
       </div>
 
-      {/* Parallax gradient orbs */}
-      <div 
+      {/* Parallax orbs */}
+      <div
         className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-500/5 rounded-full blur-3xl transition-transform duration-300"
         style={{ transform: `translate(${mousePosition.x * -0.03}px, ${mousePosition.y * -0.03}px)` }}
       />
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/3 rounded-full blur-3xl transition-transform duration-300"
         style={{ transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)` }}
       />
@@ -602,7 +592,7 @@ const HeroSection = memo(function HeroSection({
               animation: `float ${5 + Math.random() * 7}s ease-in-out infinite`,
               animationDelay: `${Math.random() * 5}s`,
               transform: `translate(${mousePosition.x * 0.01 * (i % 3 - 1)}px, ${mousePosition.y * 0.01 * (i % 2 - 0.5)}px)`,
-              transition: 'transform 0.2s ease-out',
+              transition: "transform 0.2s ease-out",
             }}
           />
         ))}
@@ -615,7 +605,11 @@ const HeroSection = memo(function HeroSection({
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-red-500/30" />
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span className="text-[11px] sm:text-xs tracking-[0.2em] uppercase text-slate-400 font-medium">
                 Trusted by Industry Leaders
@@ -633,27 +627,27 @@ const HeroSection = memo(function HeroSection({
                 onMouseEnter={() => setHoveredPartner(index)}
                 onMouseLeave={() => setHoveredPartner(null)}
               >
-                <div 
+                <div
                   className={`relative flex items-center gap-3 px-5 py-3 rounded-[5px] transition-all duration-500 ${
                     index === currentPartnerIndex || hoveredPartner === index
-                      ? 'bg-[#1a1d25] border border-red-500/20 shadow-lg shadow-red-500/5 scale-110'
-                      : 'hover:bg-[#1a1d25] hover:border border-white/5'
+                      ? "bg-[#1a1d25] border border-red-500/20 shadow-lg shadow-red-500/5 scale-110"
+                      : "hover:bg-[#1a1d25] hover:border border-white/5"
                   }`}
                 >
-                  <div 
+                  <div
                     className={`w-8 h-8 rounded-[5px] flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                       index === currentPartnerIndex || hoveredPartner === index
-                        ? 'bg-red-500/20 text-red-400'
-                        : 'bg-slate-800/50 text-slate-500'
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-slate-800/50 text-slate-500"
                     }`}
                   >
                     {partner.logo}
                   </div>
-                  <span 
+                  <span
                     className={`text-xs font-medium tracking-wider transition-all duration-300 ${
                       index === currentPartnerIndex || hoveredPartner === index
-                        ? 'text-white'
-                        : 'text-slate-500 group-hover:text-slate-300'
+                        ? "text-white"
+                        : "text-slate-500 group-hover:text-slate-300"
                     }`}
                   >
                     {partner.name}
@@ -671,16 +665,16 @@ const HeroSection = memo(function HeroSection({
 
           {/* Trust Badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-3xl mx-auto">
-            <TrustBadge 
+            <TrustBadge
               icon={
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               }
               label="Security"
-              value="256-bit SSL"
+              value="256‑bit SSL"
             />
-            <TrustBadge 
+            <TrustBadge
               icon={
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -689,7 +683,7 @@ const HeroSection = memo(function HeroSection({
               label="Regulation"
               value="FCA, ASIC, CySEC"
             />
-            <TrustBadge 
+            <TrustBadge
               icon={
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -698,7 +692,7 @@ const HeroSection = memo(function HeroSection({
               label="Execution"
               value="< 40ms"
             />
-            <TrustBadge 
+            <TrustBadge
               icon={
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -714,13 +708,13 @@ const HeroSection = memo(function HeroSection({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
           <div className="text-center lg:text-left space-y-6 order-2 lg:order-1 animate-slideUp">
-            <div className="inline-flex animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+            <div className="inline-flex animate-fadeIn" style={{ animationDelay: "0.2s" }}>
               <span className="text-[11px] sm:text-xs tracking-wide text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-1.5 rounded-[5px]">
                 Institutional Trading Platform
               </span>
             </div>
 
-            <div className="animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+            <div className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
               <h1 className="font-extrabold leading-[0.9] tracking-tight">
                 <span className="block text-[clamp(48px,8vw,96px)] text-white hover:scale-105 transition-transform duration-500 inline-block">
                   EXPART
@@ -736,21 +730,33 @@ const HeroSection = memo(function HeroSection({
               </div>
             </div>
 
-            <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0 animate-fadeIn" style={{ animationDelay: '0.6s' }}>
-              Professional trading platform with 
-              <span className="text-white font-medium"> institutional execution</span>, 
-              <span className="text-white font-medium"> advanced analytics</span>, and 
-              <span className="text-red-400"> real-time market data</span>.
+            <p
+              className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0 animate-fadeIn"
+              style={{ animationDelay: "0.6s" }}
+            >
+              Professional trading platform with
+              <span className="text-white font-medium"> institutional execution</span>,
+              <span className="text-white font-medium"> advanced analytics</span>, and
+              <span className="text-red-400"> real‑time market data</span>.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-1 animate-fadeIn" style={{ animationDelay: '0.8s' }}>
+            <div
+              className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-1 animate-fadeIn"
+              style={{ animationDelay: "0.8s" }}
+            >
               <Link
                 href="/Login"
                 className="group px-7 py-3.5 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm rounded-[5px] transition-all duration-200 text-center shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:scale-105 active:scale-95"
               >
                 <span className="flex items-center justify-center gap-2">
                   Open Live Account
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <svg
+                    className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </span>
@@ -766,12 +772,8 @@ const HeroSection = memo(function HeroSection({
             <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-6 border-t border-white/[0.06] max-w-lg mx-auto lg:mx-0">
               {STATS.map((s, i) => (
                 <div key={s.label} className="animate-fadeIn" style={{ animationDelay: `${1 + i * 0.2}s` }}>
-                  <p className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                    {s.num}
-                  </p>
-                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5">
-                    {s.label}
-                  </p>
+                  <p className="text-xl sm:text-2xl font-bold text-white tracking-tight">{s.num}</p>
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -788,9 +790,7 @@ const HeroSection = memo(function HeroSection({
                 <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-[5px] bg-red-500/10 text-red-400 mb-3 group-hover:bg-red-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                   {card.icon}
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-1">
-                  {card.title}
-                </h3>
+                <h3 className="text-sm font-semibold text-white mb-1">{card.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed group-hover:text-slate-400 transition-colors duration-300">
                   {card.desc}
                 </p>
@@ -810,18 +810,27 @@ const HeroSection = memo(function HeroSection({
 
       <style jsx>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
         }
         @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
         }
       `}</style>
     </section>
   );
 });
-
 HeroSection.displayName = "HeroSection";
 
 const PlatformSection = memo(function PlatformSection() {
@@ -835,7 +844,7 @@ const PlatformSection = memo(function PlatformSection() {
           className="absolute inset-0"
           style={{
             backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
+            backgroundSize: "50px 50px",
           }}
         />
       </div>
@@ -860,8 +869,8 @@ const PlatformSection = memo(function PlatformSection() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 sm:px-5 py-2.5 rounded-[5px] text-[13px] font-medium transition-all duration-300 border ${
                 activeTab === tab.key
-                  ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20'
-                  : 'bg-[#1a1d25] border-[#2a2d35] text-slate-400 hover:text-white hover:border-red-500/30'
+                  ? "bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20"
+                  : "bg-[#1a1d25] border-[#2a2d35] text-slate-400 hover:text-white hover:border-red-500/30"
               }`}
             >
               {tab.label}
@@ -889,10 +898,8 @@ const PlatformSection = memo(function PlatformSection() {
           </div>
 
           <div className="order-1 lg:order-2" key={active.key}>
-            <h3 className="font-bold text-2xl sm:text-3xl mb-4 text-white animate-fadeIn">
-              {active.title}
-            </h3>
-            <p className="text-slate-400 mb-6 leading-relaxed animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+            <h3 className="font-bold text-2xl sm:text-3xl mb-4 text-white animate-fadeIn">{active.title}</h3>
+            <p className="text-slate-400 mb-6 leading-relaxed animate-fadeIn" style={{ animationDelay: "0.1s" }}>
               {active.desc}
             </p>
             <ul className="space-y-3 mb-8">
@@ -902,7 +909,13 @@ const PlatformSection = memo(function PlatformSection() {
                   className="flex items-center gap-3 text-sm text-slate-300 animate-fadeIn"
                   style={{ animationDelay: `${0.15 + i * 0.08}s` }}
                 >
-                  <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <svg
+                    className="w-4 h-4 text-red-400 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                   {point}
@@ -914,7 +927,13 @@ const PlatformSection = memo(function PlatformSection() {
               className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm rounded-[5px] transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:scale-105 active:scale-95"
             >
               Explore {active.label}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
@@ -924,8 +943,14 @@ const PlatformSection = memo(function PlatformSection() {
 
       <style jsx>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out both;
@@ -934,7 +959,6 @@ const PlatformSection = memo(function PlatformSection() {
     </section>
   );
 });
-
 PlatformSection.displayName = "PlatformSection";
 
 const EducationSection = memo(function EducationSection() {
@@ -945,7 +969,7 @@ const EducationSection = memo(function EducationSection() {
           className="absolute inset-0"
           style={{
             backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
+            backgroundSize: "50px 50px",
           }}
         />
       </div>
@@ -958,7 +982,8 @@ const EducationSection = memo(function EducationSection() {
               Learn Before You Leverage
             </h2>
             <p className="text-slate-400 text-sm sm:text-base max-w-xl">
-              Free courses, live sessions, and research built by our trading desk — for every stage from first trade to full-time.
+              Free courses, live sessions, and research built by our trading desk — for every stage from first trade to
+              full‑time.
             </p>
           </div>
           <Link
@@ -966,7 +991,13 @@ const EducationSection = memo(function EducationSection() {
             className="hidden sm:inline-flex items-center gap-2 text-sm text-white hover:text-red-400 transition-colors duration-200 group whitespace-nowrap"
           >
             View all resources
-            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <svg
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
@@ -996,7 +1027,13 @@ const EducationSection = memo(function EducationSection() {
                   className="text-xs font-medium text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
                 >
                   Start
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
@@ -1010,7 +1047,13 @@ const EducationSection = memo(function EducationSection() {
           className="sm:hidden mt-8 inline-flex items-center gap-2 text-sm text-white hover:text-red-400 transition-colors duration-200 group"
         >
           View all resources
-          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg
+            className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>
@@ -1018,68 +1061,65 @@ const EducationSection = memo(function EducationSection() {
     </section>
   );
 });
-
 EducationSection.displayName = "EducationSection";
+
+// ============================================
+// NEW & IMPROVED FOOTER (compact, sleek)
+// ============================================
 
 const Footer = memo(function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setSubscribed(true);
-    setEmail("");
-  }, [email]);
+  const handleSubscribe = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!email.trim()) return;
+      setSubscribed(true);
+      setEmail("");
+    },
+    [email]
+  );
 
   return (
-    <footer className="border-t border-white/[0.04] bg-[#0f1117]">
-      {/* Newsletter strip */}
-      <div className="border-b border-white/[0.04]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="text-center lg:text-left">
-            <h3 className="text-lg sm:text-xl font-semibold text-white mb-1">Get market insight in your inbox</h3>
-            <p className="text-sm text-slate-500">One email a week. No noise, unsubscribe anytime.</p>
-          </div>
-          <form onSubmit={handleSubscribe} className="flex w-full lg:w-auto max-w-sm gap-2">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
-              aria-label="Email address"
-              className="flex-1 lg:w-64 bg-[#1a1d25] border border-[#2a2d35] focus:border-red-500/50 outline-none text-sm text-white placeholder:text-slate-600 rounded-[5px] px-4 py-3 transition-colors"
-            />
-            <button
-              type="submit"
-              className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-medium text-sm rounded-[5px] transition-all duration-200 whitespace-nowrap hover:scale-105 active:scale-95"
-            >
-              {subscribed ? "Subscribed ✓" : "Subscribe"}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
-          {/* Brand column */}
-          <div className="col-span-2 lg:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-1.5 mb-4">
+    <footer className="border-t border-white/[0.06] bg-[#0f1117]">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10">
+        {/* Main grid: brand + 3 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Brand + newsletter + social */}
+          <div className="space-y-4">
+            <Link href="/" className="inline-flex items-center gap-1.5">
               <span className="font-bold text-lg tracking-tight text-white">
                 EXPART<span className="text-red-500">FX</span>
               </span>
             </Link>
-            <p className="text-xs text-slate-500 leading-relaxed mb-5 max-w-[220px]">
-              Institutional-grade execution for retail and professional traders across forex, equities, crypto, and commodities.
+            <p className="text-xs text-slate-500 leading-relaxed max-w-[200px]">
+              Institutional execution for retail & professional traders.
             </p>
+            <form onSubmit={handleSubscribe} className="flex max-w-[220px]">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                aria-label="Email address"
+                className="flex-1 bg-[#1a1d25] border border-[#2a2d35] focus:border-red-500/50 outline-none text-sm text-white placeholder:text-slate-600 rounded-l-[5px] px-3 py-2"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-r-[5px] transition-colors whitespace-nowrap"
+              >
+                {subscribed ? "✓" : "Subscribe"}
+              </button>
+            </form>
             <div className="flex items-center gap-2">
               {SOCIAL_LINKS.map((social) => (
                 <Link
                   key={social.name}
                   href={social.href}
                   aria-label={social.name}
-                  className="w-8 h-8 flex items-center justify-center rounded-[5px] bg-[#1a1d25] border border-[#2a2d35] text-slate-500 hover:text-white hover:border-red-500/30 hover:bg-[#1e212a] transition-all duration-200"
+                  className="w-7 h-7 flex items-center justify-center rounded-[5px] bg-[#1a1d25] border border-[#2a2d35] text-slate-500 hover:text-white hover:border-red-500/30 transition-all"
                 >
                   {social.icon}
                 </Link>
@@ -1087,13 +1127,16 @@ const Footer = memo(function Footer() {
             </div>
           </div>
 
+          {/* Links columns – 3 */}
           {FOOTER_COLUMNS.map((column) => (
             <div key={column.heading}>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">{column.heading}</h4>
-              <ul className="space-y-2.5">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-white/70 mb-3">
+                {column.heading}
+              </h4>
+              <ul className="space-y-2">
                 {column.links.map((item) => (
                   <li key={item}>
-                    <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+                    <Link href="#" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
                       {item}
                     </Link>
                   </li>
@@ -1103,35 +1146,37 @@ const Footer = memo(function Footer() {
           ))}
         </div>
 
-        {/* Regulatory badges */}
-        <div className="flex flex-wrap items-center gap-3 pb-8 border-b border-[#2a2d35]">
-          {["FCA Regulated", "ASIC Licensed", "CySEC Authorized", "256-bit SSL Encryption"].map((badge) => (
-            <span
-              key={badge}
-              className="text-[11px] text-slate-500 bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              {badge}
-            </span>
-          ))}
+        {/* Bottom bar: regulatory + copyright */}
+        <div className="mt-10 pt-6 border-t border-[#2a2d35] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {["FCA Regulated", "ASIC Licensed", "CySEC Authorized", "256-bit SSL"].map((badge) => (
+              <span
+                key={badge}
+                className="text-[10px] text-slate-500 bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] px-2.5 py-1 flex items-center gap-1"
+              >
+                <svg className="w-2.5 h-2.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {badge}
+              </span>
+            ))}
+          </div>
+          <span className="text-[10px] text-slate-600">© 2026 ExpartFX. All rights reserved.</span>
         </div>
 
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-slate-600">© 2026 ExpartFX. All rights reserved.</span>
-          </div>
-          <p className="text-[11px] text-slate-600 text-center max-w-2xl leading-relaxed">
-            Trading CFDs and leveraged products carries a high level of risk and may not be suitable for all investors.
-            Past performance does not guarantee future results. Please ensure you fully understand the risks before trading.
-          </p>
-        </div>
+        {/* Risk disclaimer – smaller, one line */}
+        <p className="text-[9px] text-slate-600/60 text-center mt-4 leading-relaxed max-w-3xl mx-auto">
+          Trading CFDs and leveraged products carries a high level of risk. Past performance does not guarantee future
+          results. Please ensure you fully understand the risks before trading.
+        </p>
       </div>
     </footer>
   );
 });
-
 Footer.displayName = "Footer";
 
 // ============================================
@@ -1145,60 +1190,62 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#0f1117] text-white min-h-screen">
-      <Navigation 
-        isScrolled={isScrolled} 
-        mobileMenuOpen={mobileMenuOpen} 
-        setMobileMenuOpen={setMobileMenuOpen} 
-      />
+      <Navigation isScrolled={isScrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       <HeroSection mousePosition={mousePosition} />
 
       {/* Image Showcase Section */}
       <section className="py-20 sm:py-28 bg-[#13161c] relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.02]">
-          <div 
-            className="absolute inset-0" 
+          <div
+            className="absolute inset-0"
             style={{
               backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-              backgroundSize: '60px 60px',
+              backgroundSize: "60px 60px",
               transform: `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`,
-              transition: 'transform 0.1s ease-out',
+              transition: "transform 0.1s ease-out",
             }}
           />
         </div>
 
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div 
-              className="relative animate-slideRight" 
+            <div
+              className="relative animate-slideRight"
               style={{ transform: `translateY(${mousePosition.y * 0.02}px)` }}
             >
               <div className="relative rounded-[5px] overflow-hidden border border-[#2a2d35] shadow-2xl shadow-black/50 group">
                 <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                
+
                 <div className="aspect-[16/10] bg-[#1a1d25] relative flex items-center justify-center">
-                  <Image 
-                    src="/images/dashboard-preview.jpg" 
-                    alt="Trading Dashboard" 
-                    fill 
+                  <Image
+                    src="/images/dashboard-preview.jpg"
+                    alt="Trading Dashboard"
+                    fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
-                
+
                 <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-[5px] z-20">
-                  Real-time Trading Dashboard
+                  Real‑time Trading Dashboard
                 </div>
               </div>
 
-              <div 
+              <div
                 className="absolute -bottom-4 -right-4 bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] p-4 shadow-xl animate-float z-20 hidden lg:block"
                 style={{ transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)` }}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-green-500/20 rounded-[5px] flex items-center justify-center">
-                    <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <svg
+                      className="w-4 h-4 text-green-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
@@ -1210,21 +1257,30 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div 
-              className="animate-slideLeft"
-              style={{ transform: `translateY(${mousePosition.y * -0.02}px)` }}
-            >
+            <div className="animate-slideLeft" style={{ transform: `translateY(${mousePosition.y * -0.02}px)` }}>
               <p className="text-xs tracking-[0.2em] uppercase text-red-400 mb-3 font-medium">Platform</p>
               <h2 className="font-bold text-3xl sm:text-4xl mb-4 text-white">
                 Professional Trading <span className="text-red-500">Platform</span>
               </h2>
               <p className="text-slate-400 mb-6 leading-relaxed">
-                Experience lightning-fast execution with our institutional-grade trading platform. Access advanced charting tools, real-time market data, and seamless order management.
+                Experience lightning‑fast execution with our institutional‑grade trading platform. Access advanced
+                charting tools, real‑time market data, and seamless order management.
               </p>
               <ul className="space-y-3">
-                {["Advanced charting with 100+ indicators", "One-click trading execution", "Real-time P&L tracking", "Multi-device synchronization"].map((feature) => (
+                {[
+                  "Advanced charting with 100+ indicators",
+                  "One‑click trading execution",
+                  "Real‑time P&L tracking",
+                  "Multi‑device synchronization",
+                ].map((feature) => (
                   <li key={feature} className="flex items-center gap-3 text-sm text-slate-300">
-                    <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <svg
+                      className="w-4 h-4 text-red-400 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                     {feature}
@@ -1241,11 +1297,11 @@ export default function HomePage() {
       {/* Markets Section */}
       <section id="markets" className="py-16 sm:py-20 px-5 sm:px-6 lg:px-8 bg-[#13161c] relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.01]">
-          <div 
-            className="absolute inset-0" 
+          <div
+            className="absolute inset-0"
             style={{
               backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-              backgroundSize: '50px 50px',
+              backgroundSize: "50px 50px",
             }}
           />
         </div>
@@ -1253,11 +1309,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 sm:mb-14">
             <p className="text-xs tracking-[0.2em] uppercase text-red-400 mb-3 font-medium">Markets</p>
-            <h2 className="font-bold text-3xl sm:text-4xl lg:text-5xl mb-4 text-white">
-              Trade Global Markets
-            </h2>
+            <h2 className="font-bold text-3xl sm:text-4xl lg:text-5xl mb-4 text-white">Trade Global Markets</h2>
             <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
-              Access 10,000+ trading instruments across multiple asset classes with institutional-grade execution.
+              Access 10,000+ trading instruments across multiple asset classes with institutional‑grade execution.
             </p>
           </div>
 
@@ -1266,17 +1320,17 @@ export default function HomePage() {
               <div
                 key={service.title}
                 className="group bg-[#1a1d25] border border-[#2a2d35] hover:border-red-500/30 rounded-[5px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
-                style={{ 
+                style={{
                   animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`,
                   transform: `translateY(${mousePosition.y * 0.01 * (index % 2 === 0 ? 1 : -1)}px)`,
                 }}
               >
                 <div className="relative h-40 overflow-hidden">
                   <div className="absolute inset-0 bg-[#1e212a] flex items-center justify-center">
-                    <Image 
-                      src={service.image} 
-                      alt={service.title} 
-                      fill 
+                    <Image
+                      src={service.image}
+                      alt={service.title}
+                      fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
@@ -1293,7 +1347,13 @@ export default function HomePage() {
                   <ul className="space-y-2">
                     {service.features.map((feature) => (
                       <li key={feature} className="text-xs text-slate-400 flex items-center gap-2">
-                        <svg className="w-3.5 h-3.5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <svg
+                          className="w-3.5 h-3.5 text-red-400 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                         {feature}
@@ -1324,8 +1384,8 @@ export default function HomePage() {
       {/* Testimonials Section */}
       <section className="py-20 sm:py-28 px-5 sm:px-6 lg:px-8 bg-[#0f1117] relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]">
-          <div 
-            className="absolute inset-0" 
+          <div
+            className="absolute inset-0"
             style={{
               backgroundImage: `radial-gradient(circle at 20% 50%, rgba(239, 68, 68, 0.1) 0%, transparent 50%)`,
             }}
@@ -1339,9 +1399,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-4">
               <div className="h-px w-8 bg-gradient-to-r from-transparent to-red-500/50" />
-              <span className="text-xs tracking-[0.2em] uppercase text-red-400 font-medium">
-                Testimonials
-              </span>
+              <span className="text-xs tracking-[0.2em] uppercase text-red-400 font-medium">Testimonials</span>
               <div className="h-px w-8 bg-gradient-to-l from-transparent to-red-500/50" />
             </div>
 
@@ -1356,7 +1414,7 @@ export default function HomePage() {
               <div className="flex items-center gap-2">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <svg key={i} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
@@ -1381,14 +1439,14 @@ export default function HomePage() {
               <div
                 key={testimonial.name}
                 className="group relative bg-gradient-to-br from-[#1a1d25] to-[#13161c] border border-[#2a2d35] hover:border-red-500/40 rounded-[5px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-500/10 overflow-hidden"
-                style={{ 
+                style={{
                   animation: `fadeInUp 0.6s ease-out ${index * 0.15}s both`,
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/0 via-red-500/0 to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                  <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                   </svg>
                 </div>
@@ -1396,31 +1454,35 @@ export default function HomePage() {
                 <div className="relative p-7">
                   <div className="flex gap-1 mb-5">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <svg key={i} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <svg key={i} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     ))}
                   </div>
 
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6 min-h-[80px]">
-                    "{testimonial.text}"
-                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-6 min-h-[80px]">"{testimonial.text}"</p>
 
                   <div className="flex items-center gap-2 mb-4">
-                    <svg className="w-3.5 h-3.5 text-green-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <svg className="w-3.5 h-3.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
                     </svg>
-                    <span className="text-[10px] uppercase tracking-wider text-green-400 font-medium">Verified Trader</span>
+                    <span className="text-[10px] uppercase tracking-wider text-green-400 font-medium">
+                      Verified Trader
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-4 pt-5 border-t border-[#2a2d35] group-hover:border-red-500/20 transition-colors duration-500">
                     <div className="relative">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1a1d25] border-2 border-[#2a2d35] group-hover:border-red-500/50 transition-colors duration-500 flex-shrink-0">
-                        <Image 
-                          src={testimonial.avatar} 
-                          alt={testimonial.name} 
-                          width={48} 
-                          height={48} 
+                        <Image
+                          src={testimonial.avatar}
+                          alt={testimonial.name}
+                          width={48}
+                          height={48}
                           className="object-cover"
                           sizes="48px"
                         />
@@ -1428,21 +1490,25 @@ export default function HomePage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {testimonial.role}
-                      </p>
-                      <p className="text-[10px] text-slate-600 mt-0.5">
-                        {testimonial.company}
-                      </p>
+                      <p className="text-sm font-semibold text-white truncate">{testimonial.name}</p>
+                      <p className="text-xs text-slate-400">{testimonial.role}</p>
+                      <p className="text-[10px] text-slate-600 mt-0.5">{testimonial.company}</p>
                     </div>
 
                     <div className="flex-shrink-0">
                       <div className="w-8 h-8 rounded-[5px] bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors duration-500">
-                        <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        <svg
+                          className="w-4 h-4 text-red-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -1456,12 +1522,17 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-6 bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] px-6 py-3 hover:border-red-500/30 transition-all duration-300">
               <span className="text-sm text-slate-400">Join 15,000+ traders</span>
               <div className="w-px h-6 bg-[#2a2d35]" />
-              <Link 
-                href="/Login" 
+              <Link
+                href="/Login"
                 className="text-sm text-white hover:text-red-400 transition-colors duration-200 flex items-center gap-2 group"
               >
                 Start your journey
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <svg
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
@@ -1473,34 +1544,42 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-16 sm:py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[#1a1d25] opacity-50">
-          <Image 
-            src="/images/stock_market_bg_vctr.jpg" 
-            alt="Trading background" 
-            fill 
+          <Image
+            src="/images/stock_market_bg_vctr.jpg"
+            alt="Trading background"
+            fill
             className="object-cover opacity-90"
             sizes="100vw"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#0f1117] via-transparent to-[#0f1117]" />
 
-        <div 
+        <div
           className="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center"
           style={{ transform: `translateY(${mousePosition.y * -0.02}px)` }}
         >
           <h2 className="font-bold text-3xl sm:text-4xl lg:text-5xl mb-4 text-white animate-fadeIn">
             Ready to Start <span className="text-red-500">Trading</span>?
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base mb-8 max-w-lg mx-auto animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+          <p
+            className="text-slate-400 text-sm sm:text-base mb-8 max-w-lg mx-auto animate-fadeIn"
+            style={{ animationDelay: "0.2s" }}
+          >
             Join thousands of professional traders who trust ExpartFX. Open your account in minutes.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center animate-fadeIn" style={{ animationDelay: "0.4s" }}>
             <Link
               href="/Login"
               className="group px-8 py-4 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm rounded-[5px] transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:scale-105 active:scale-95"
             >
               <span className="flex items-center justify-center gap-2">
                 Open Live Account
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <svg
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </span>
@@ -1519,8 +1598,12 @@ export default function HomePage() {
 
       <style jsx>{`
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes fadeInUp {
           from {
@@ -1573,8 +1656,13 @@ export default function HomePage() {
           }
         }
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
         }
 
         .animate-fadeIn {
