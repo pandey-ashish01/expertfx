@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";   // ← नया import
 import {
   Loader2, UserPlus, Phone, AlertCircle,
   CheckCircle, Mail, User, Copy,
@@ -127,9 +128,10 @@ export default function JoinReferralForm() {
         <p className="efx-body-dim" style={{ marginTop: "0.35rem" }}>
           This referral link is invalid or has expired. Ask your referrer to resend it.
         </p>
-        <a href="/login" className="efx-btn efx-btn--primary" style={{ marginTop: "1.75rem" }}>
+        {/* ← यहाँ a को Link से बदला, href को /Login किया */}
+        <Link href="/Login" className="efx-btn efx-btn--primary" style={{ marginTop: "1.75rem" }}>
           Go to login <ArrowRight size={15} />
-        </a>
+        </Link>
       </div>
     </Shell>
   );
@@ -188,7 +190,8 @@ export default function JoinReferralForm() {
           <button onClick={copyId} className="efx-btn efx-btn--primary" style={{ width: "100%" }}>
             <Copy size={15} /> Copy User ID
           </button>
-          <button onClick={() => router.push("/login")} className="efx-btn efx-btn--ghost" style={{ width: "100%" }}>
+          {/* ← यहाँ router.push को /Login किया */}
+          <button onClick={() => router.push("/Login")} className="efx-btn efx-btn--ghost" style={{ width: "100%" }}>
             Proceed to login <ArrowRight size={15} />
           </button>
         </div>
@@ -285,7 +288,7 @@ export default function JoinReferralForm() {
         </form>
 
         <p className="efx-footer-link">
-          Already registered? <a href="/Login">Log in</a>
+          Already registered? <Link href="/Login">Log in</Link>   {/* ← यहाँ a को Link से बदला */}
         </p>
       </div>
     </Shell>
@@ -650,7 +653,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <div className="efx-brandrow">
               <div className="efx-mark"><ShieldCheck size={17} /></div>
               <div>
-                {/* ब्रांड नाम अब EXPARTFX है */}
+                {/* ब्रांड नाम EXPARTFX */}
                 <p className="efx-brand-word">EXPART<em>FX</em></p>
                 <p className="efx-brand-sub">Referred account opening</p>
               </div>
