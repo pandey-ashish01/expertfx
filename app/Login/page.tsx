@@ -759,7 +759,7 @@ export default function LoginForm() {
                     value={userCode}
                     onChange={handleUserCodeChange}
                     className="expartfx-input"
-                    placeholder="e.g. EXPART001, mobile, or email"
+                    placeholder="e.g. EFX001, mobile, or email"   // ← अपडेटेड placeholder
                     required
                   />
                 </div>

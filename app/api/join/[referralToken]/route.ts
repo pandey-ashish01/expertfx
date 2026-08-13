@@ -5,8 +5,9 @@ import bcrypt from "bcryptjs";
 
 const DEFAULT_MAX_MONTHS = 24;
 
+// ─── यहाँ प्रीफिक्स EFX है ──────────────────────────────────────────────
 async function generateUserCode(): Promise<string> {
-  const PREFIX = "EXFX";
+  const PREFIX = "EFX";
   let code = "";
   let isUnique = false;
 
