@@ -1080,7 +1080,7 @@ export default function HomePage() {
               <span className="font-bold text-white hover:scale-105 transition-transform">
                 EXPERT<span className="text-red-500">FX</span>
               </span>
-              <span className="text-xs text-slate-600">© 2025</span>
+              <span className="text-xs text-slate-600">© 2026</span>
             </div>
             <p className="text-[11px] text-slate-600 text-center">
               Trading involves significant risk. Past performance does not guarantee future results.
