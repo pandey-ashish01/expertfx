@@ -118,7 +118,7 @@ const TESTIMONIALS = [
   {
     name: "Taylor Mitchell",
     role: "Professional Trader",
-    text: "ExpertFX transformed my trading experience. The execution speed and analytics are unmatched.",
+    text: "ExpartFX transformed my trading experience. The execution speed and analytics are unmatched.",
     avatar: "/images/3911.jpg",
     rating: 5,
     company: "Independent",
@@ -134,7 +134,7 @@ const TESTIMONIALS = [
   {
     name: "Sarah Okonkwo",
     role: "Independent Investor",
-    text: "Started with $1000, now managing a six-figure portfolio. ExpertFX gave me the edge.",
+    text: "Started with $1000, now managing a six-figure portfolio. ExpartFX gave me the edge.",
     avatar: "/images/3911.jpg",
     rating: 5,
     company: "Okonkwo Investments",
@@ -474,9 +474,9 @@ const Navigation = memo(function Navigation({
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          <Link href="/" className="flex items-center gap-1.5 group" aria-label="ExpertFX Home">
+          <Link href="/" className="flex items-center gap-1.5 group" aria-label="ExpartFX Home">
             <span className="font-bold text-xl tracking-tight text-white group-hover:scale-105 transition-transform duration-300">
-              EXPERT<span className="text-red-500">FX</span>
+              EXPART<span className="text-red-500">FX</span>
             </span>
           </Link>
 
@@ -723,7 +723,7 @@ const HeroSection = memo(function HeroSection({
             <div className="animate-fadeIn" style={{ animationDelay: '0.4s' }}>
               <h1 className="font-extrabold leading-[0.9] tracking-tight">
                 <span className="block text-[clamp(48px,8vw,96px)] text-white hover:scale-105 transition-transform duration-500 inline-block">
-                  EXPERT
+                  EXPART
                 </span>
                 <span className="block text-[clamp(48px,8vw,96px)] text-red-500 hover:scale-105 transition-transform duration-500 inline-block">
                   FX
@@ -1067,7 +1067,7 @@ const Footer = memo(function Footer() {
           <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-flex items-center gap-1.5 mb-4">
               <span className="font-bold text-lg tracking-tight text-white">
-                EXPERT<span className="text-red-500">FX</span>
+                EXPART<span className="text-red-500">FX</span>
               </span>
             </Link>
             <p className="text-xs text-slate-500 leading-relaxed mb-5 max-w-[220px]">
@@ -1120,7 +1120,7 @@ const Footer = memo(function Footer() {
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="text-xs text-slate-600">© 2026 ExpertFX. All rights reserved.</span>
+            <span className="text-xs text-slate-600">© 2026 ExpartFX. All rights reserved.</span>
           </div>
           <p className="text-[11px] text-slate-600 text-center max-w-2xl leading-relaxed">
             Trading CFDs and leveraged products carries a high level of risk and may not be suitable for all investors.
@@ -1349,7 +1349,7 @@ export default function HomePage() {
               Trusted by <span className="text-red-500">Professionals</span>
             </h2>
             <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
-              Hear what our community of successful traders and investors say about their experience with ExpertFX
+              Hear what our community of successful traders and investors say about their experience with ExpartFX
             </p>
 
             <div className="flex items-center justify-center gap-8 mt-6">
@@ -1491,7 +1491,7 @@ export default function HomePage() {
             Ready to Start <span className="text-red-500">Trading</span>?
           </h2>
           <p className="text-slate-400 text-sm sm:text-base mb-8 max-w-lg mx-auto animate-fadeIn" style={{ animationDelay: '0.2s' }}>
-            Join thousands of professional traders who trust ExpertFX. Open your account in minutes.
+            Join thousands of professional traders who trust ExpartFX. Open your account in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center animate-fadeIn" style={{ animationDelay: '0.4s' }}>
             <Link
