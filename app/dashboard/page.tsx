@@ -9,7 +9,7 @@ import {
   Key, Clock, CheckCircle, XCircle,
   Copy, Zap, BarChart3, Wallet, Star, Shield, Activity,
   ShieldCheck, Network, ChevronDown, ChevronRight,
-  FileText, ArrowLeft, Globe
+  FileText, ArrowLeft, Globe, Sparkles, Rocket, Award, Flame
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import ProfitDistributionPanel from "@/components/ProfitDistribution";
@@ -1398,410 +1398,360 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Investments Render ────────────────────────────────────────────────────
+ // ─── Investments Render ────────────────────────────────────────────────────
   function renderInvestments() {
-    // Investment plan options
-    const plans = [
-      { value: 100, label: "100 USDT", isOffer: true, badge: "🔥 Special Offer" },
-      { value: 200, label: "200 USDT", isOffer: false },
-      { value: 500, label: "500 USDT", isOffer: false },
-      { value: 1000, label: "1000 USDT", isOffer: false },
-    ];
-
-    // Auto-select amount when a plan is chosen
-    const selectPlan = (amount: number) => {
-      setPaymentForm({ ...paymentForm, amount: String(amount) });
-    };
-
-    const amountVal = parseFloat(paymentForm.amount) || 0;
-    const dailyInterest = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal) : 0;
+    const amountVal       = parseFloat(paymentForm.amount) || 0;
+    const dailyInterest   = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal) : 0;
     const monthlyInterest = amountVal * MONTHLY_RATE;
 
+    // ── Pricing Plans ──
+    const plans = [
+      {
+        amount: 100,
+        label: "Starter",
+        tagline: "Try it out",
+        badge: "OFFER",
+        icon: Sparkles,
+        accent: "from-amber-400 to-orange-500",
+        glow: "shadow-[0_8px_24px_-8px_rgba(251,191,36,0.35)]",
+        glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(251,191,36,0.5)]",
+        ring: "hover:ring-amber-400/40",
+        features: ["Instant activation", "Daily payout", "24 months validity", "Referral bonus"],
+        highlight: false,
+      },
+      {
+        amount: 200,
+        label: "Basic",
+        tagline: "Get started",
+        badge: null,
+        icon: Rocket,
+        accent: "from-blue-400 to-cyan-500",
+        glow: "shadow-[0_8px_24px_-8px_rgba(59,130,246,0.35)]",
+        glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(59,130,246,0.5)]",
+        ring: "hover:ring-blue-400/40",
+        features: ["Instant activation", "Daily payout", "24 months validity", "Referral bonus"],
+        highlight: false,
+      },
+      {
+        amount: 500,
+        label: "Personal",
+        tagline: "Most chosen",
+        badge: "POPULAR",
+        icon: Flame,
+        accent: "from-red-500 to-orange-500",
+        glow: "shadow-[0_10px_30px_-6px_rgba(239,68,68,0.45)]",
+        glowHover: "hover:shadow-[0_16px_40px_-8px_rgba(239,68,68,0.6)]",
+        ring: "hover:ring-red-500/50",
+        features: ["Instant activation", "Daily payout", "24 months validity", "Priority support"],
+        highlight: true,
+      },
+      {
+        amount: 1000,
+        label: "Business",
+        tagline: "Go big",
+        badge: null,
+        icon: Award,
+        accent: "from-purple-500 to-fuchsia-500",
+        glow: "shadow-[0_8px_24px_-8px_rgba(168,85,247,0.35)]",
+        glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.5)]",
+        ring: "hover:ring-purple-400/40",
+        features: ["Instant activation", "Daily payout", "24 months validity", "Priority support"],
+        highlight: false,
+      },
+    ];
+
+    const selectPlan = (amt: number) => {
+      setPaymentForm({ ...paymentForm, amount: String(amt) });
+      setShowAddPayment(true);
+      setTimeout(() => {
+        document.getElementById("investment-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    };
+
     return (
-      <div className="space-y-4 max-w-4xl mx-auto">
+      <div className="space-y-5 max-w-5xl mx-auto">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-lg md:text-2xl font-black">Investments</h1>
-            <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-              8% monthly · Up to 5,000 USDT
+            <p className={`flex items-center gap-1.5 text-xs md:text-sm font-bold mt-0.5 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>
+              <TrendingUp className="w-3.5 h-3.5" /> Monthly Approx 40% – 50% Profits
             </p>
           </div>
           <button
             onClick={() => setShowAddPayment(!showAddPayment)}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-xs md:text-sm flex-shrink-0"
+            className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-[length:200%_auto] hover:bg-right text-white font-bold px-3.5 md:px-5 py-2.5 md:py-3 rounded-lg text-xs md:text-sm flex-shrink-0 shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_8px_26px_-4px_rgba(239,68,68,0.65)] ring-1 ring-white/10 transition-all duration-300 active:scale-95"
           >
-            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Invest
+            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Custom Amount
           </button>
         </div>
 
+        {/* ── Pricing Plan Cards ── */}
+        <div>
+          <div className={`flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden`} style={{ scrollbarWidth: "none" }}>
+            {plans.map((plan) => {
+              const Icon = plan.icon;
+              return (
+                <div
+                  key={plan.amount}
+                  className={`group relative flex-shrink-0 w-[72%] xs:w-[64%] sm:w-[42%] md:w-auto snap-center rounded-xl overflow-hidden transition-all duration-300 ease-out active:scale-[0.97] hover:-translate-y-1 ring-1 ring-transparent ${plan.ring} ${
+                    plan.highlight
+                      ? `bg-gradient-to-b ${isDarkMode ? "from-[#1a1024] to-[#150c1e]" : "from-red-50 to-white"} ring-2 ring-red-500/70 ${plan.glow} ${plan.glowHover}`
+                      : isDarkMode
+                      ? `bg-[#111827] border border-white/[0.06] ${plan.glow} ${plan.glowHover}`
+                      : `bg-white border border-gray-200 ${plan.glow} ${plan.glowHover}`
+                  }`}
+                >
+                  {plan.highlight && (
+                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-red-500/20 to-transparent pointer-events-none" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  {plan.badge && (
+                    <span
+                      className={`absolute top-3 right-3 z-10 flex items-center gap-1 text-[9px] font-black px-2 py-[3px] rounded-full tracking-wide shadow-sm ${
+                        plan.badge === "OFFER"
+                          ? "bg-gradient-to-r from-amber-400 to-orange-400 text-black"
+                          : "bg-gradient-to-r from-red-500 to-orange-500 text-white"
+                      }`}
+                    >
+                      {plan.badge === "POPULAR" && <Flame className="w-2.5 h-2.5" />}
+                      {plan.badge}
+                    </span>
+                  )}
+
+                  <div className="p-3.5 md:p-4 relative">
+                    <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${plan.accent} flex items-center justify-center mb-3 shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+
+                    <p className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-gray-900"}`}>{plan.label}</p>
+                    <p className={`text-[11px] mb-2.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{plan.tagline}</p>
+
+                    <div className="flex items-baseline gap-1 mb-3">
+                      <span className="text-2xl md:text-3xl font-black tracking-tight">{plan.amount}</span>
+                      <span className={`text-xs font-bold ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>USDT</span>
+                    </div>
+
+                    <div className={`h-px w-full mb-3 ${isDarkMode ? "bg-white/10" : "bg-gray-100"}`} />
+
+                    <div className="space-y-1.5 mb-4">
+                      {plan.features.map((f) => (
+                        <div key={f} className="flex items-center gap-2">
+                          <div className={`w-3.5 h-3.5 rounded-full bg-gradient-to-br ${plan.accent} flex items-center justify-center flex-shrink-0`}>
+                            <CheckCircle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                          </div>
+                          <span className={`text-[11px] ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => selectPlan(plan.amount)}
+                      className={`w-full py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 ${
+                        plan.highlight
+                          ? `bg-gradient-to-r ${plan.accent} bg-[length:180%_auto] hover:bg-right text-white shadow-lg ${plan.glow} ring-1 ring-white/10`
+                          : isDarkMode
+                          ? "bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20"
+                          : "bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      Get this plan <ChevronRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className={`md:hidden text-center text-[10px] mt-1 ${isDarkMode ? "text-gray-600" : "text-gray-400"}`}>← swipe to see all plans →</p>
+        </div>
+
+        {/* Mobile floating custom-amount button */}
+        <button
+          onClick={() => setShowAddPayment(!showAddPayment)}
+          className="sm:hidden w-full flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-gray-300 font-semibold px-4 py-3 rounded-lg text-xs transition-all active:scale-[0.98] hover:bg-white/[0.08]"
+        >
+          <Plus className="w-3.5 h-3.5" /> Enter a custom amount instead
+        </button>
+
         {showAddPayment && (
-          <div className={`${card} overflow-hidden`}>
+          <div id="investment-form" className={`${card} overflow-hidden scroll-mt-4 !rounded-xl shadow-[0_8px_30px_-8px_rgba(0,0,0,0.35)]`}>
             <div className="h-1 bg-gradient-to-r from-red-500 to-red-600" />
             <div className="p-3 md:p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-sm md:text-base">New Investment</h3>
-                <button
-                  onClick={() => setShowAddPayment(false)}
-                  className="p-1.5 rounded-lg hover:bg-white/5"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <button onClick={() => setShowAddPayment(false)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"><X className="w-4 h-4" /></button>
               </div>
-
-              {/* ─── Investment Plan Cards ─── */}
-              <div className="mb-4">
-                <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-                  Choose Investment Plan *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
-                  {plans.map((plan) => {
-                    const isSelected = amountVal === plan.value;
-                    return (
-                      <button
-                        key={plan.value}
-                        onClick={() => selectPlan(plan.value)}
-                        className={`
-                          relative p-3 md:p-4 rounded-xl border-2 transition-all text-center
-                          ${isSelected
-                            ? "border-red-500 bg-red-500/10 shadow-lg shadow-red-500/20"
-                            : isDarkMode
-                              ? "border-white/10 bg-white/5 hover:border-red-500/40"
-                              : "border-gray-200 bg-gray-50 hover:border-red-500/40"
-                          }
-                          ${plan.isOffer ? "ring-2 ring-amber-500/50" : ""}
-                        `}
-                      >
-                        {plan.isOffer && (
-                          <span className="absolute -top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            {plan.badge}
-                          </span>
-                        )}
-                        <p className={`font-black text-base md:text-lg ${isSelected ? "text-red-400" : ""}`}>
-                          {plan.label}
-                        </p>
-                        {plan.isOffer && (
-                          <p className={`text-[10px] mt-1 ${isDarkMode ? "text-amber-400" : "text-amber-600"}`}>
-                            Limited time
-                          </p>
-                        )}
-                        {isSelected && (
-                          <CheckCircle className="w-4 h-4 text-red-400 mx-auto mt-1" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* ─── Monthly Profit Note ─── */}
-              <div className={`mb-4 p-3 rounded-xl ${isDarkMode ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"}`}>
-                <p className="text-xs md:text-sm font-semibold text-emerald-400 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
-                  Monthly Approx <span className="font-black text-emerald-300">40% - 50%</span> Profits
-                </p>
-              </div>
-
-              {amountVal >= 50 && amountVal <= 5000 && (
-                <div className={`mb-4 p-3 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Daily</p>
-                      <p className="font-bold text-emerald-400 text-xs md:text-sm">
-                        {dailyInterest.toFixed(4)} USDT
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Monthly</p>
-                      <p className="font-bold text-emerald-400 text-xs md:text-sm">
-                        {monthlyInterest.toFixed(2)} USDT
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Max Return</p>
-                      <p className="font-bold text-amber-400 text-xs md:text-sm">
-                        {(amountVal * 2).toFixed(0)} USDT
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="space-y-4">
-                {/* ─── Amount input (hidden or optional) ─── */}
-                <div className="hidden">
+                <div>
+                  <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Amount (USDT) *</label>
                   <input
                     type="number"
                     value={paymentForm.amount}
                     onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                    className={input}
+                    className={`${input} !rounded-lg`}
                     placeholder="Min: 50 – Max: 5,000 USDT"
                     min="50"
                     max="5000"
                   />
+                  {amountVal >= 50 && amountVal <= 5000 && (
+                    <div className={`mt-2 p-3 rounded-lg ${isDarkMode ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"}`}>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div><p className="text-xs text-gray-500 mb-0.5">Daily</p><p className="font-bold text-emerald-400 text-xs md:text-sm">{dailyInterest.toFixed(4)} USDT</p></div>
+                        <div><p className="text-xs text-gray-500 mb-0.5">Monthly</p><p className="font-bold text-emerald-400 text-xs md:text-sm">{monthlyInterest.toFixed(2)} USDT</p></div>
+                        <div><p className="text-xs text-gray-500 mb-0.5">Max Return</p><p className="font-bold text-amber-400 text-xs md:text-sm">{(amountVal * 2).toFixed(0)} USDT</p></div>
+                      </div>
+                    </div>
+                  )}
+                  {amountVal > 0 && (amountVal < 50 || amountVal > 5000) && <p className="text-red-400 text-xs mt-1">Amount must be between 50 and 5,000 USDT</p>}
                 </div>
-
                 <div>
-                  <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-                    Note (Optional)
-                  </label>
+                  <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Note (Optional)</label>
                   <input
                     type="text"
                     value={paymentForm.description}
                     onChange={(e) => setPaymentForm({ ...paymentForm, description: e.target.value })}
-                    className={input}
+                    className={`${input} !rounded-lg`}
                     placeholder="Add a note or transaction ID"
                   />
                 </div>
-
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-                    Your MT5 deposit screenshot attach here *
+                    MT5 Deposit Screenshot *
                   </label>
                   <div
-                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
-                      isDarkMode
-                        ? "border-white/10 hover:border-red-500/30"
-                        : "border-gray-200 hover:border-red-500/50"
+                    className={`relative rounded-xl p-5 text-center transition-all duration-300 overflow-hidden group ${
+                      paymentForm.screenshot
+                        ? isDarkMode
+                          ? "border border-emerald-500/30 bg-emerald-500/[0.04]"
+                          : "border border-emerald-400/40 bg-emerald-50/60"
+                        : isDarkMode
+                        ? "border-2 border-dashed border-white/12 hover:border-red-500/40 bg-white/[0.02] hover:bg-white/[0.04]"
+                        : "border-2 border-dashed border-gray-200 hover:border-red-400/60 bg-gray-50/50 hover:bg-red-50/30"
                     }`}
                   >
                     {paymentForm.screenshot ? (
-                      <div className="space-y-2">
-                        <img
-                          src={URL.createObjectURL(paymentForm.screenshot)}
-                          alt="Preview"
-                          className="mx-auto h-20 w-auto object-contain rounded-lg"
-                        />
-                        <p className="text-xs text-gray-400 truncate">
-                          {paymentForm.screenshot.name}
-                        </p>
-                        <button
-                          onClick={() => setPaymentForm({ ...paymentForm, screenshot: null })}
-                          className="text-xs text-red-400 hover:underline"
-                        >
-                          Remove
-                        </button>
+                      <div className="space-y-3">
+                        <div className="relative inline-block">
+                          <img
+                            src={URL.createObjectURL(paymentForm.screenshot)}
+                            alt="Preview"
+                            className={`mx-auto h-28 w-auto object-contain rounded-lg shadow-md ring-1 ${isDarkMode ? "ring-white/10" : "ring-gray-200"}`}
+                          />
+                          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-md ring-2 ring-[#111827]">
+                            <CheckCircle className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <p className={`text-xs truncate max-w-[160px] font-medium ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{paymentForm.screenshot.name}</p>
+                        </div>
+                        <div className="flex items-center justify-center gap-3">
+                          <label className={`text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"}`}>
+                            Replace
+                            <input type="file" accept="image/*" onChange={(e) => setPaymentForm({ ...paymentForm, screenshot: e.target.files?.[0] || null })} className="hidden" />
+                          </label>
+                          <button onClick={() => setPaymentForm({ ...paymentForm, screenshot: null })} className="text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     ) : (
-                      <div>
-                        <CreditCard className="w-7 h-7 mx-auto mb-2 text-gray-500" />
-                        <p className="text-xs text-gray-400 mb-2">
-                          Upload MT5 deposit screenshot
-                        </p>
-                        <label className="bg-red-500 text-white px-4 py-2.5 rounded-lg cursor-pointer text-xs font-semibold hover:bg-red-600 transition-all inline-block">
-                          Choose File
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              setPaymentForm({
-                                ...paymentForm,
-                                screenshot: e.target.files?.[0] || null,
-                              })
-                            }
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
+                      <label className="cursor-pointer block">
+                        <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${isDarkMode ? "bg-red-500/10" : "bg-red-50"}`}>
+                          <CreditCard className="w-5 h-5 text-red-400" />
+                        </div>
+                        <p className={`text-sm font-semibold mb-1 ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>Upload your MT5 deposit screenshot</p>
+                        <p className="text-xs text-gray-500 mb-3">PNG or JPG · Drag & drop or click to browse</p>
+                        <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-[0_4px_14px_-3px_rgba(239,68,68,0.5)] hover:shadow-[0_6px_18px_-3px_rgba(239,68,68,0.65)] transition-all">
+                          <Plus className="w-3.5 h-3.5" /> Choose File
+                        </span>
+                        <input type="file" accept="image/*" onChange={(e) => setPaymentForm({ ...paymentForm, screenshot: e.target.files?.[0] || null })} className="hidden" />
+                      </label>
                     )}
                   </div>
                 </div>
-
-                <div
-                  className={`p-3 rounded-xl flex items-start gap-2 ${
-                    isDarkMode
-                      ? "bg-red-500/10 border border-red-500/20"
-                      : "bg-red-50 border border-red-200"
-                  }`}
-                >
+                <div className={`p-3 rounded-lg flex items-start gap-2 ${isDarkMode ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"}`}>
                   <Shield className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-red-300">
-                    Investment will be <strong>pending</strong> until Super Admin approves it.
-                  </p>
+                  <p className="text-xs text-red-300">Investment will be <strong>pending</strong> until Super Admin approves it.</p>
                 </div>
-
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleAddPayment}
-                    disabled={!paymentForm.amount || !paymentForm.screenshot || amountVal < 50 || amountVal > 5000}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed text-sm"
-                  >
+                  <button onClick={handleAddPayment} disabled={!paymentForm.amount || !paymentForm.screenshot || amountVal < 50 || amountVal > 5000} className="flex-1 bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-[length:200%_auto] hover:bg-right text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_8px_26px_-4px_rgba(239,68,68,0.65)] transition-all duration-300 active:scale-[0.98]">
                     Submit Investment
                   </button>
-                  <button
-                    onClick={() => setShowAddPayment(false)}
-                    className={`px-4 py-3 rounded-xl border text-sm ${
-                      isDarkMode ? "border-white/10" : "border-gray-200"
-                    }`}
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={() => setShowAddPayment(false)} className={`px-4 py-3 rounded-lg border text-sm transition-colors ${isDarkMode ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"}`}>Cancel</button>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ─── Existing investment list ─── */}
         {paymentsLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-t-transparent border-red-500 rounded-full animate-spin" />
-          </div>
+          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-t-transparent border-red-500 rounded-full animate-spin" /></div>
         ) : payments.length === 0 ? (
-          <div className={`${card} p-8 text-center`}>
+          <div className={`${card} !rounded-xl p-8 text-center`}>
             <TrendingUp className="w-10 h-10 mx-auto mb-3 text-gray-500" />
-            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-              No investments yet. Select a plan above to get started!
-            </p>
+            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>No investments yet. Start with as little as 50 USDT!</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {payments.map((payment) => {
-              const statusCfg = getStatusConfig(payment.status);
+          <div className="space-y-2.5">
+            {payments.map(payment => {
+              const statusCfg  = getStatusConfig(payment.status);
               const StatusIcon = statusCfg.icon;
-              const calc = payment.investmentCalc;
-              const maxMo = payment.maxMonths || DEFAULT_MAX_MONTHS;
+              const calc       = payment.investmentCalc;
+              const maxMo      = payment.maxMonths || DEFAULT_MAX_MONTHS;
               return (
-                <div key={payment._id} className={card}>
-                  <div className="p-3 md:p-5">
-                    <div className="flex items-start justify-between mb-3 gap-2">
+                <div key={payment._id} className={`${card} !rounded-xl transition-all duration-300 hover:-translate-y-0.5 ${isDarkMode ? "hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] hover:border-white/10" : "hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]"}`}>
+                  <div className="p-3 md:p-4">
+                    <div className="flex items-start justify-between mb-2.5 gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                            isDarkMode ? "bg-red-500/10" : "bg-red-50"
-                          }`}
-                        >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDarkMode ? "bg-red-500/10" : "bg-red-50"}`}>
                           <DollarSign className="w-4 h-4 text-red-400" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-base md:text-lg">
-                            {payment.amount}{" "}
-                            <span className="text-xs md:text-sm font-normal text-gray-400">USDT</span>
-                          </p>
+                          <p className="font-bold text-sm md:text-base">{payment.amount} <span className="text-xs md:text-sm font-normal text-gray-400">USDT</span></p>
                           <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                            {new Date(payment.createdAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
+                            {new Date(payment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <div
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-semibold ${statusCfg.bg}`}
-                        >
+                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-semibold ${statusCfg.bg}`}>
                           <StatusIcon className={`w-3 h-3 ${statusCfg.color}`} />
-                          <span className={`${statusCfg.color} hidden sm:inline`}>
-                            {statusCfg.label}
-                          </span>
+                          <span className={`${statusCfg.color} hidden sm:inline`}>{statusCfg.label}</span>
                         </div>
-                        <button
-                          onClick={() => window.open(payment.screenshot, "_blank")}
-                          className="p-1.5 rounded-lg hover:bg-white/5"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-gray-400" />
-                        </button>
-                        <button
-                          onClick={() => handleDeletePayment(payment._id)}
-                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <button onClick={() => window.open(payment.screenshot, "_blank")} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"><Eye className="w-3.5 h-3.5 text-gray-400" /></button>
+                        <button onClick={() => handleDeletePayment(payment._id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
-
                     {payment.status === "approved" && calc && (
-                      <div
-                        className={`rounded-xl p-3 ${isDarkMode ? "bg-white/3" : "bg-gray-50"}`}
-                      >
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                          <div>
-                            <p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                              Days Active
-                            </p>
-                            <p className="font-bold text-xs md:text-sm">{calc.daysElapsed} days</p>
-                          </div>
-                          <div>
-                            <p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                              Daily
-                            </p>
-                            <p className="font-bold text-xs md:text-sm text-emerald-400">
-                              {calc.dailyInterest} USDT
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                              Earned
-                            </p>
-                            <p className="font-bold text-xs md:text-sm text-emerald-400">
-                              {calc.totalInterest.toFixed(4)} USDT
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                              Max Return
-                            </p>
-                            <p className="font-bold text-xs md:text-sm text-amber-400">
-                              {calc.maxInterest.toFixed(2)} USDT
-                            </p>
-                          </div>
+                      <div className={`rounded-lg p-2.5 ${isDarkMode ? "bg-white/3" : "bg-gray-50"}`}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2.5">
+                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Days Active</p><p className="font-bold text-xs md:text-sm">{calc.daysElapsed} days</p></div>
+                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Daily</p><p className="font-bold text-xs md:text-sm text-emerald-400">{calc.dailyInterest} USDT</p></div>
+                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Earned</p><p className="font-bold text-xs md:text-sm text-emerald-400">{calc.totalInterest.toFixed(4)} USDT</p></div>
+                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Max Return</p><p className="font-bold text-xs md:text-sm text-amber-400">{calc.maxInterest.toFixed(2)} USDT</p></div>
                         </div>
                         <div>
                           <div className="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>
-                              {calc.daysElapsed}/{maxMo * 30}d
-                            </span>
+                            <span>{calc.daysElapsed}/{maxMo * 30}d</span>
                             <span>{((calc.daysElapsed / (maxMo * 30)) * 100).toFixed(1)}%</span>
                           </div>
-                          <div
-                            className={`h-1.5 rounded-full ${
-                              isDarkMode ? "bg-white/10" : "bg-gray-200"
-                            }`}
-                          >
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600"
-                              style={{
-                                width: `${Math.min((calc.daysElapsed / (maxMo * 30)) * 100, 100)}%`,
-                              }}
-                            />
+                          <div className={`h-1.5 rounded-full ${isDarkMode ? "bg-white/10" : "bg-gray-200"}`}>
+                            <div className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600" style={{ width: `${Math.min((calc.daysElapsed / (maxMo * 30)) * 100, 100)}%` }} />
                           </div>
                           <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                            Matures:{" "}
-                            {new Date(calc.maturityDate).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                            {calc.isMatured && (
-                              <span className="text-red-400 ml-2 font-semibold">Matured</span>
-                            )}
+                            Matures: {new Date(calc.maturityDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            {calc.isMatured && <span className="text-red-400 ml-2 font-semibold">Matured</span>}
                           </p>
                         </div>
                       </div>
                     )}
-
                     {payment.status === "pending" && (
-                      <div
-                        className={`rounded-xl p-3 flex items-center gap-2 ${
-                          isDarkMode
-                            ? "bg-amber-500/10 border border-amber-500/20"
-                            : "bg-amber-50 border border-amber-200"
-                        }`}
-                      >
+                      <div className={`rounded-lg p-2.5 flex items-center gap-2 ${isDarkMode ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
                         <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                        <p className="text-xs text-amber-300">
-                          Awaiting approval. Daily interest of{" "}
-                          <strong>{getDailyInterest(payment.amount).toFixed(4)} USDT</strong> starts
-                          once approved.
-                        </p>
+                        <p className="text-xs text-amber-300">Awaiting approval. Daily interest of <strong>{getDailyInterest(payment.amount).toFixed(4)} USDT</strong> starts once approved.</p>
                       </div>
                     )}
-
-                    {payment.description && (
-                      <p className={`text-xs mt-2 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                        {payment.description}
-                      </p>
-                    )}
+                    {payment.description && <p className={`text-xs mt-2 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{payment.description}</p>}
                   </div>
                 </div>
               );
