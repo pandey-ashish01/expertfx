@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 
 // ---------------------------
-// Types and Data (unchanged)
+// Types and Data
 // ---------------------------
 type OfferKey = "copyTrading" | "login" | "openAccount";
 
@@ -207,10 +207,10 @@ export default function ConnectBrokerPage() {
       {/* ================= MAIN CONTENT ================= */}
       <div className="pt-16 sm:pt-20">
         {/* Page Heading */}
-        <section className="py-12 sm:py-16 px-5 sm:px-6 lg:px-8 bg-[#0f1117]">
+        <section className="py-10 sm:py-14 px-5 sm:px-6 lg:px-8 bg-[#0f1117]">
           <div className="max-w-7xl mx-auto text-center">
-            <p className="text-xs tracking-[0.2em] uppercase text-red-400 mb-3 font-medium">XM Partner Offers</p>
-            <h1 className="font-bold text-3xl sm:text-4xl lg:text-5xl mb-4 text-white">
+            <p className="text-xs tracking-[0.2em] uppercase text-red-400 mb-2 font-medium">XM Partner Offers</p>
+            <h1 className="font-bold text-3xl sm:text-4xl lg:text-5xl mb-3 text-white">
               Choose Your Path to Trading
             </h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
@@ -221,81 +221,52 @@ export default function ConnectBrokerPage() {
         </section>
 
         {/* Offer Sections Stacked */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 space-y-8 sm:space-y-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 sm:pb-18 space-y-6 sm:space-y-10">
           {sectionOrder.map((key) => {
             const offer = offers[key];
             return (
               <section key={key} id={key} className="scroll-mt-24">
                 <div className="bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] overflow-hidden transition-all duration-300 hover:border-red-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-500/5
                   shadow-[0_8px_30px_rgba(0,0,0,0.3)] sm:shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
-                  {/* Image Banner */}
-                  <div className="relative h-52 sm:h-72 lg:h-80 w-full overflow-hidden">
-                    <Image
-                      src={offer.image}
-                      alt={offer.label}
-                      fill
-                      priority
-                      sizes="(max-width: 768px) 100vw, 80vw"
-                      className="object-cover"
-                    />
-                    {/* Gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d25] via-[#1a1d25]/40 to-transparent" />
+                  
+                  {/* Image - full width, no clipping, no fixed height */}
+                  <Image
+                    src={offer.image}
+                    alt={offer.label}
+                    width={800}
+                    height={600}
+                    sizes="(max-width: 768px) 100vw, 80vw"
+                    className="w-full h-auto"
+                    priority
+                  />
 
-                    {/* Badge */}
-                    <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-2 backdrop-blur-md shadow-lg shadow-black/20">
-                        <span className={`h-2 w-2 rounded-full ${offer.badgeDot}`} />
-                        <span className="text-xs font-medium text-white/80">{offer.badge}</span>
-                      </div>
-                    </div>
+                  {/* Compact Text: only Heading, Code, Button */}
+                  <div className="p-3 sm:p-4 lg:p-5">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight mb-2">
+                      {offer.headingLine1}{" "}
+                      <span className="text-red-500">{offer.headingLine2}</span>
+                    </h2>
 
-                    {/* Heading overlay */}
-                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
-                      <p className="text-xs font-medium uppercase tracking-[0.2em] text-red-400 mb-1">
-                        {offer.eyebrow}
-                      </p>
-                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
-                        {offer.headingLine1}{" "}
-                        <span className="text-red-500">{offer.headingLine2}</span>
-                      </h2>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-5 sm:p-6 lg:p-8">
-                    <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-5 sm:mb-6">
-                      {offer.description}
-                    </p>
-
-                    {/* Partner Code */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-black/20 border border-[#2a2d35] rounded-[5px] p-4 mb-5 sm:mb-6 shadow-inner">
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
-                          {offer.partnerLabel}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-400">{offer.partnerHint}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-[5px] border border-[#2a2d35] bg-[#0f1117] px-4 py-2.5 shadow-lg shadow-black/20">
-                          <span className="font-mono text-base font-bold tracking-[0.15em] text-white">
-                            {partnerCode}
-                          </span>
-                        </div>
+                    <div className="flex items-center justify-between gap-2 mb-2 bg-black/20 border border-[#2a2d35] rounded-[5px] p-2">
+                      <span className="text-xs text-slate-400">{offer.partnerLabel}:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-base font-bold tracking-[0.1em] text-white">
+                          {partnerCode}
+                        </span>
                         <button
                           onClick={copyCode}
-                          className="rounded-[5px] border border-[#2a2d35] bg-[#1a1d25] hover:bg-[#2a2d35] px-3 py-2 text-xs font-semibold text-slate-300 transition-colors shadow-lg shadow-black/20"
+                          className="rounded-[5px] border border-[#2a2d35] bg-[#1a1d25] hover:bg-[#2a2d35] px-2 py-1 text-[10px] font-semibold text-slate-300 transition-colors"
                         >
                           Copy
                         </button>
                       </div>
                     </div>
 
-                    {/* CTA Button */}
                     <a
                       href={offer.redirectUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex min-h-[52px] w-full items-center justify-center rounded-[5px] bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                      className="group flex w-full items-center justify-center rounded-[5px] bg-red-500 hover:bg-red-600 text-white font-semibold text-sm py-2.5 transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 hover:scale-[1.02] active:scale-[0.98]"
                     >
                       {offer.ctaLabel}
                       <svg
@@ -308,18 +279,6 @@ export default function ConnectBrokerPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </a>
-
-                    {/* Risk note */}
-                    <div className="mt-5 flex items-center justify-center gap-3 text-xs text-slate-500">
-                      <span>18+</span>
-                      <span className="h-1 w-1 rounded-full bg-slate-700" />
-                      <span>Trading involves risk</span>
-                    </div>
-
-                    {/* Footer note */}
-                    <p className="mt-4 text-center text-xs leading-relaxed text-slate-600">
-                      {offer.footerNote}
-                    </p>
                   </div>
                 </div>
               </section>
