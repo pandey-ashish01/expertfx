@@ -9,10 +9,12 @@ import {
   Key, Clock, CheckCircle, XCircle,
   Copy, Zap, BarChart3, Wallet, Star, Shield, Activity,
   ShieldCheck, Network, ChevronDown, ChevronRight,
-  FileText, ArrowLeft, Globe, Sparkles, Rocket, Award, Flame
+  FileText, ArrowLeft, Globe, Sparkles, Rocket, Award, Flame,
+  Link2                               // <-- new icon for Connect Broker
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import ProfitDistributionPanel from "@/components/ProfitDistribution";
+import { useRouter } from "next/navigation";   // <-- CORRECTED IMPORT for App Router
 
 // ---------- Interfaces ----------
 interface Payment {
@@ -892,6 +894,8 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const router = useRouter();   // <-- now from next/navigation
+
   const [activeTab, setActiveTab]   = useState("dashboard");
   const [user, setUser]             = useState<UserData | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -1115,6 +1119,7 @@ export default function DashboardPage() {
   const approvedPayments = payments.filter(p => p.status === "approved");
   const pendingPayments  = payments.filter(p => p.status === "pending");
 
+  // Define tabs – add "connectBroker" at the end
   const tabs = [
     { id: "dashboard",   label: "Dashboard",  icon: BarChart3 },
     { id: "investments", label: "Investments", icon: TrendingUp },
@@ -1126,7 +1131,17 @@ export default function DashboardPage() {
     { id: "share",       label: "Share",       icon: Share2 },
     { id: "settings",    label: "Settings",    icon: Settings },
     ...(isAdmin ? [{ id: "admin", label: "Admin", icon: ShieldCheck }] : []),
+    { id: "connectBroker", label: "Connect Broker", icon: Link2 },   // <-- new tab
   ];
+
+  // Helper to handle tab clicks
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "connectBroker") {
+      router.push("/connect-broker");   // navigate to the page
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
   const bg   = isDarkMode ? "min-h-screen bg-[#080c14] text-white" : "min-h-screen bg-gray-50 text-gray-900";
   const card = isDarkMode ? "bg-[#111827] border border-white/5 rounded-2xl" : "bg-white border border-gray-200 rounded-2xl shadow-sm";
@@ -1202,7 +1217,7 @@ export default function DashboardPage() {
               {tabs.map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); setIsMobileMenuOpen(false); }}
+                  onClick={() => { handleTabClick(tab.id); setIsMobileMenuOpen(false); }}
                   className={`flex items-center gap-3 w-full p-3.5 rounded-xl transition-all text-sm ${
                     activeTab === tab.id
                       ? "bg-red-500 text-white font-bold"
@@ -1231,7 +1246,7 @@ export default function DashboardPage() {
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`flex flex-col items-center gap-1 p-3 rounded-xl w-16 transition-all ${
                   activeTab === tab.id
                     ? "bg-red-500 text-white"
@@ -1273,6 +1288,7 @@ export default function DashboardPage() {
       case "share":       return renderShare();
       case "settings":    return renderSettings();
       case "admin":       return isAdmin ? <AdminPanel isDarkMode={isDarkMode} card={card} /> : renderDashboard();
+      // connectBroker is not handled here because we navigate away
       default:            return renderDashboard();
     }
   }
