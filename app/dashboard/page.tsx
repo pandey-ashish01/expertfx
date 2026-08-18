@@ -112,6 +112,32 @@ interface PasswordFormData {
 
 const SUPER_ADMIN_CODE = "EXPERT000";
 
+// ─── Global Helpers ──────────────────────────────────────────────────────────
+
+/** Recursively compute branch investment = personal + all downline */
+function computeBranchInvestment(node: UserNode): number {
+  let sum = node.paymentSummary.totalInvested;
+  for (const child of node.children) {
+    sum += computeBranchInvestment(child);
+  }
+  return sum;
+}
+
+/** Determine monthly rate and max months based on branch investment */
+function getRateAndMonths(branch: number): { rate: number; months: number } {
+  if (branch >= 2000) return { rate: 0.12, months: 36 };
+  if (branch >= 500)  return { rate: 0.10, months: 30 };
+  return { rate: 0.08, months: 24 };
+}
+
+/** Optional debug helper – uncomment and call to log tree data */
+// function debugTree(node: UserNode, prefix = "") {
+//   const branch = computeBranchInvestment(node);
+//   const { rate } = getRateAndMonths(branch);
+//   console.log(`${prefix}${node.name} (${node.userCode}) – Personal: ${node.paymentSummary.totalInvested}, Branch: ${branch}, Rate: ${(rate*100).toFixed(0)}%`);
+//   node.children.forEach(child => debugTree(child, prefix + "  "));
+// }
+
 function getDailyInterest(amount: number, monthlyRate: number) {
   return (amount * monthlyRate) / 30;
 }
@@ -149,6 +175,7 @@ function normalizeTreeNode(node: any, level: number = 0): UserNode {
 }
 
 // ─── Admin Panel ─────────────────────────────────────────────────────────────
+
 interface AdminPayment {
   _id: string;
   amount: number;
@@ -348,7 +375,8 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
   );
 }
 
-// ─── Network Panel ────────────────────────────────────────────────────────────
+// ─── Network Panel (UPDATED) ────────────────────────────────────────────────
+
 function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode: boolean; card: string }) {
   const [hierarchyData, setHierarchyData] = useState<UserNode | null>(null);
   const [loading, setLoading] = useState(true);
@@ -384,6 +412,8 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
         const normalized = normalizeTreeNode(data.data);
         setHierarchyData(normalized);
         setExpandedNodes(new Set([normalized._id]));
+        // Optional debug:
+        // debugTree(normalized);
       } else {
         setError(data.message || "Failed to load network");
       }
@@ -420,6 +450,8 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
     const isExpanded  = expandedNodes.has(node._id);
     const isRoot      = node.level === 0;
     const ps          = node.paymentSummary;
+    const branchTotal = computeBranchInvestment(node);
+    const { rate }    = getRateAndMonths(branchTotal);
 
     return (
       <div key={node._id} className="mb-2">
@@ -445,6 +477,14 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
                 <p className="font-bold text-sm md:text-base truncate">{node.name}</p>
                 {isRoot && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">YOU</span>}
                 {node.userCode && <span className="font-mono text-xs text-red-400 flex-shrink-0">{node.userCode}</span>}
+                {/* Dynamic rate badge */}
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  rate === 0.12 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
+                  rate === 0.10 ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
+                  "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                }`}>
+                  {(rate * 100).toFixed(0)}%
+                </span>
               </div>
               <p className={`text-xs md:text-sm truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{node.mobile}</p>
             </div>
@@ -457,9 +497,9 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
           <div className={`mx-3 mb-3 p-2.5 rounded-xl grid grid-cols-2 md:grid-cols-4 gap-2 ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
             {[
               { label: "Invested",  value: `${ps.totalInvested} USDT`,                  icon: Wallet,      color: "text-blue-400"    },
+              { label: "Branch",    value: `${branchTotal} USDT`,                       icon: Network,     color: "text-purple-400"  },
               { label: "Interest",  value: `${ps.totalInterestEarned.toFixed(2)} USDT`, icon: TrendingUp,  color: "text-emerald-400" },
               { label: "Approved",  value: `${ps.approvedCount} plans`,                 icon: CheckCircle, color: "text-emerald-400" },
-              { label: "Pending",   value: `${ps.pendingCount} plans`,                  icon: Clock,       color: "text-amber-400"   },
             ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="text-center">
                 <Icon className={`w-3.5 h-3.5 mx-auto mb-0.5 ${color}`} />
@@ -485,6 +525,8 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
   const countAll = (node: UserNode): number =>
     (node.children?.length || 0) + (node.children?.reduce((s, c) => s + countAll(c), 0) || 0);
   const totalMembers = countAll(hierarchyData);
+  const rootBranch = computeBranchInvestment(hierarchyData);
+  const rootRate = getRateAndMonths(rootBranch).rate;
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
@@ -501,12 +543,34 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
           Refresh
         </button>
       </div>
+
+      {/* Top stats: Personal, Downline, Branch, Your Rate */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+        <div className={`${card} p-3 md:p-4`}>
+          <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Personal</p>
+          <p className="text-lg md:text-xl font-black text-blue-400">{hierarchyData.paymentSummary.totalInvested} USDT</p>
+        </div>
+        <div className={`${card} p-3 md:p-4`}>
+          <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Downline</p>
+          <p className="text-lg md:text-xl font-black text-emerald-400">{(rootBranch - hierarchyData.paymentSummary.totalInvested)} USDT</p>
+        </div>
+        <div className={`${card} p-3 md:p-4`}>
+          <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Branch (Total)</p>
+          <p className="text-lg md:text-xl font-black text-purple-400">{rootBranch} USDT</p>
+        </div>
+        <div className={`${card} p-3 md:p-4`}>
+          <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Your Rate</p>
+          <p className="text-lg md:text-xl font-black text-amber-400">{(rootRate * 100).toFixed(0)}%</p>
+        </div>
+      </div>
+
       <div className={`${card} p-3 md:p-5`}>{renderNode(hierarchyData)}</div>
     </div>
   );
 }
 
-// ─── Membership Component ────────────────────────────────────────────────────
+// ─── Membership Component (unchanged) ──────────────────────────────────────
+
 interface LevelStats {
   level: number;
   members: UserNode[];
@@ -925,7 +989,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
   );
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
+// ─── Main Dashboard ──────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -955,7 +1019,7 @@ export default function DashboardPage() {
     amount: "",
     description: "",
     screenshot: null,
-    monthlyRate: 0.08,
+    monthlyRate: 0.08,   // fallback, will be overridden
     maxMonths: 25,
   });
 
@@ -964,6 +1028,8 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const isAdmin = user?.userCode === SUPER_ADMIN_CODE;
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const token    = localStorage.getItem("token");
@@ -989,6 +1055,8 @@ export default function DashboardPage() {
       fetchTreeData(user._id);
     }
   }, [activeTab, user]);
+
+  // ── API calls ─────────────────────────────────────────────────────────────
 
   const fetchUserDetails = async (userId: string, token: string) => {
     try {
@@ -1048,7 +1116,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ⭐ Updated fetchTreeData with 403 handling
   const fetchTreeData = async (userId: string) => {
     setTreeLoading(true);
     try {
@@ -1075,6 +1142,8 @@ export default function DashboardPage() {
       if (data.success) {
         const normalized = normalizeTreeNode(data.data);
         setTreeData(normalized);
+        // Optional debug:
+        // debugTree(normalized);
       } else {
         toast.error(data.message || "Failed to load network data");
       }
@@ -1086,16 +1155,21 @@ export default function DashboardPage() {
     }
   };
 
-  function computeBranchInvestmentFrontend(node: UserNode): { downlineInvestment: number; branchInvestment: number } {
-    let downlineSum = 0;
-    for (const child of node.children) {
-      const childResult = computeBranchInvestmentFrontend(child);
-      downlineSum += childResult.branchInvestment;
+  // ── When custom form opens, update its default rate ─────────────────────
+
+  useEffect(() => {
+    if (showAddPayment && treeData) {
+      const branch = computeBranchInvestment(treeData);
+      const { rate, months } = getRateAndMonths(branch);
+      setPaymentForm(prev => ({
+        ...prev,
+        monthlyRate: rate,
+        maxMonths: months,
+      }));
     }
-    const downlineInvestment = downlineSum;
-    const branchInvestment = node.paymentSummary.totalInvested + downlineInvestment;
-    return { downlineInvestment, branchInvestment };
-  }
+  }, [showAddPayment, treeData]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleAddPayment = async () => {
     if (!user || !paymentForm.amount || !paymentForm.screenshot) {
@@ -1422,6 +1496,7 @@ export default function DashboardPage() {
   );
 
   // ─── Render Content Switch ────────────────────────────────────────────────
+
   function renderContent() {
     switch (activeTab) {
       case "dashboard":   return renderDashboard();
@@ -1438,7 +1513,8 @@ export default function DashboardPage() {
     }
   }
 
-  // ─── Dashboard Render ──────────────────────────────────────────────────────
+  // ─── Dashboard Render (unchanged) ────────────────────────────────────────
+
   function renderDashboard() {
     const totalInterestEarned = approvedPayments.reduce((sum, p) => sum + (p.investmentCalc?.totalInterest || 0), 0);
     const totalInvested       = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
@@ -1566,15 +1642,19 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Investments Render ────────────────────────────────────────────────────
+  // ─── Investments Render (UPDATED) ─────────────────────────────────────────
+
   function renderInvestments() {
     const amountVal = parseFloat(paymentForm.amount) || 0;
-    const selectedRate = paymentForm.monthlyRate;
-    const selectedMonths = paymentForm.maxMonths;
-    const dailyInterest = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal, selectedRate) : 0;
-    const monthlyInterest = amountVal * selectedRate;
-    const maxReturn = amountVal * selectedRate * selectedMonths;
 
+    // Compute branch investment
+    let branchTotal = 0;
+    if (treeData && !treeLoading) {
+      branchTotal = computeBranchInvestment(treeData);
+    }
+    const { rate: dynamicRate, months: dynamicMonths } = getRateAndMonths(branchTotal);
+
+    // Build plans dynamically – all use the same rate & months
     const plans = [
       {
         amount: 100,
@@ -1586,10 +1666,10 @@ export default function DashboardPage() {
         glow: "shadow-[0_8px_24px_-8px_rgba(251,191,36,0.35)]",
         glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(251,191,36,0.5)]",
         ring: "hover:ring-amber-400/40",
-        features: ["Instant activation", "Daily payout", "24 months validity", "Referral bonus"],
+        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"],
         highlight: false,
-        monthlyRate: 0.08,
-        maxMonths: 24,
+        monthlyRate: dynamicRate,
+        maxMonths: dynamicMonths,
       },
       {
         amount: 200,
@@ -1601,10 +1681,10 @@ export default function DashboardPage() {
         glow: "shadow-[0_8px_24px_-8px_rgba(59,130,246,0.35)]",
         glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(59,130,246,0.5)]",
         ring: "hover:ring-blue-400/40",
-        features: ["Instant activation", "Daily payout", "24 months validity", "Referral bonus"],
+        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"],
         highlight: false,
-        monthlyRate: 0.08,
-        maxMonths: 24,
+        monthlyRate: dynamicRate,
+        maxMonths: dynamicMonths,
       },
       {
         amount: 500,
@@ -1616,10 +1696,10 @@ export default function DashboardPage() {
         glow: "shadow-[0_10px_30px_-6px_rgba(239,68,68,0.45)]",
         glowHover: "hover:shadow-[0_16px_40px_-8px_rgba(239,68,68,0.6)]",
         ring: "hover:ring-red-500/50",
-        features: ["Instant activation", "Daily payout", "30 months validity", "Priority support"],
+        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Priority support"],
         highlight: true,
-        monthlyRate: 0.10,
-        maxMonths: 30,
+        monthlyRate: dynamicRate,
+        maxMonths: dynamicMonths,
       },
       {
         amount: 1000,
@@ -1631,10 +1711,10 @@ export default function DashboardPage() {
         glow: "shadow-[0_8px_24px_-8px_rgba(168,85,247,0.35)]",
         glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.5)]",
         ring: "hover:ring-purple-400/40",
-        features: ["Instant activation", "Daily payout", "36 months validity", "Priority support"],
+        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Priority support"],
         highlight: false,
-        monthlyRate: 0.12,
-        maxMonths: 36,
+        monthlyRate: dynamicRate,
+        maxMonths: dynamicMonths,
       },
     ];
 
@@ -1653,13 +1733,17 @@ export default function DashboardPage() {
 
     let branchStats = { personal: 0, downline: 0, branch: 0 };
     if (treeData && !treeLoading) {
-      const stats = computeBranchInvestmentFrontend(treeData);
+      const branch = computeBranchInvestment(treeData);
       branchStats = {
         personal: treeData.paymentSummary.totalInvested,
-        downline: stats.downlineInvestment,
-        branch: stats.branchInvestment,
+        downline: branch - treeData.paymentSummary.totalInvested,
+        branch,
       };
     }
+
+    const dailyInterest = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal, dynamicRate) : 0;
+    const monthlyInterest = amountVal * dynamicRate;
+    const maxReturn = amountVal * dynamicRate * dynamicMonths;
 
     return (
       <div className="space-y-5 max-w-5xl mx-auto">
@@ -1667,12 +1751,12 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <h1 className="text-lg md:text-2xl font-black">Investments</h1>
             <p className={`flex items-center gap-1.5 text-xs md:text-sm font-bold mt-0.5 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>
-              <TrendingUp className="w-3.5 h-3.5" /> Dynamic plans with up to 12% monthly
+              <TrendingUp className="w-3.5 h-3.5" /> Your branch rate: {(dynamicRate * 100).toFixed(0)}% monthly
             </p>
           </div>
           <button
             onClick={() => {
-              setPaymentForm({ ...paymentForm, monthlyRate: 0.08, maxMonths: 25 });
+              setPaymentForm({ ...paymentForm, monthlyRate: dynamicRate, maxMonths: dynamicMonths });
               setShowAddPayment(!showAddPayment);
             }}
             className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-[length:200%_auto] hover:bg-right text-white font-bold px-3.5 md:px-5 py-2.5 md:py-3 rounded-lg text-xs md:text-sm flex-shrink-0 shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_8px_26px_-4px_rgba(239,68,68,0.65)] ring-1 ring-white/10 transition-all duration-300 active:scale-95"
@@ -1703,14 +1787,14 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className={`text-xs mt-3 ${isDarkMode ? "text-gray-500" : "text-gray-400"} text-center`}>
-              Your level income is calculated based on <strong>Branch Investment</strong> – your personal + entire downline.
+              Your monthly interest rate is based on your total branch investment.
             </p>
           </div>
         )}
 
         {/* Pricing Plan Cards */}
         <div>
-          <div className={`flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden`} style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
             {plans.map((plan) => {
               const Icon = plan.icon;
               return (
@@ -1792,10 +1876,10 @@ export default function DashboardPage() {
           <p className={`md:hidden text-center text-[10px] mt-1 ${isDarkMode ? "text-gray-600" : "text-gray-400"}`}>← swipe to see all plans →</p>
         </div>
 
-        {/* Mobile floating custom-amount button */}
+        {/* Mobile custom-amount button */}
         <button
           onClick={() => {
-            setPaymentForm({ ...paymentForm, monthlyRate: 0.08, maxMonths: 25 });
+            setPaymentForm({ ...paymentForm, monthlyRate: dynamicRate, maxMonths: dynamicMonths });
             setShowAddPayment(!showAddPayment);
           }}
           className="sm:hidden w-full flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-gray-300 font-semibold px-4 py-3 rounded-lg text-xs transition-all active:scale-[0.98] hover:bg-white/[0.08]"
@@ -1831,7 +1915,7 @@ export default function DashboardPage() {
                         <div><p className="text-xs text-gray-500 mb-0.5">Max Return</p><p className="font-bold text-amber-400 text-xs md:text-sm">{maxReturn.toFixed(0)} USDT</p></div>
                       </div>
                       <div className="mt-2 text-center text-xs text-gray-500">
-                        Rate: {(selectedRate * 100).toFixed(0)}% · {selectedMonths} months
+                        Rate: {(dynamicRate * 100).toFixed(0)}% · {dynamicMonths} months
                       </div>
                     </div>
                   )}
@@ -1928,6 +2012,7 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Existing payments list */}
         {paymentsLoading ? (
           <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-t-transparent border-red-500 rounded-full animate-spin" /></div>
         ) : payments.length === 0 ? (
@@ -2012,7 +2097,8 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Profile Render ────────────────────────────────────────────────────────
+  // ─── Profile Render (unchanged) ──────────────────────────────────────────
+
   function renderProfile() {
     const wasEmailRegistered = !!user!.email;
     const hasMobileAlready   = !!user!.mobile;
@@ -2124,7 +2210,8 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Finance Render ────────────────────────────────────────────────────────
+  // ─── Finance Render (unchanged) ──────────────────────────────────────────
+
   function renderFinance() {
     const walletNetworks = [
       "USDT-BEP20", "USDT-TRC20", "USDT-ERC20",
@@ -2248,7 +2335,8 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Share Render ──────────────────────────────────────────────────────────
+  // ─── Share Render (unchanged) ────────────────────────────────────────────
+
   function renderShare() {
     const shareLink = user!.userCode ? `${window.location.origin}/join/${user!.userCode}` : "";
     return (
@@ -2317,7 +2405,8 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Settings Render ──────────────────────────────────────────────────────
+  // ─── Settings Render (unchanged) ─────────────────────────────────────────
+
   function renderSettings() {
     return (
       <div className="space-y-4 max-w-2xl mx-auto">
