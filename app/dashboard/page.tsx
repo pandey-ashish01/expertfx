@@ -362,10 +362,24 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
     setError("");
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please login again.");
+        localStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
       const res = await fetch(`/api/tree/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      if (res.status === 403) {
+        setError(data.message || "You don't have permission to view this network.");
+        if (data.message?.includes("token") || data.message?.includes("unauthorized")) {
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+        return;
+      }
       if (data.success) {
         const normalized = normalizeTreeNode(data.data);
         setHierarchyData(normalized);
@@ -515,10 +529,24 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
     setError("");
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please login again.");
+        localStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
       const res = await fetch(`/api/tree/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      if (res.status === 403) {
+        setError(data.message || "You don't have permission.");
+        if (data.message?.includes("token") || data.message?.includes("unauthorized")) {
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+        return;
+      }
       if (data.success) {
         const normalized = normalizeTreeNode(data.data);
         setHierarchyData(normalized);
@@ -933,7 +961,7 @@ export default function DashboardPage() {
 
   const [treeData, setTreeData] = useState<UserNode | null>(null);
   const [treeLoading, setTreeLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false); // ⭐ loader for submit
+  const [submitting, setSubmitting] = useState(false);
 
   const isAdmin = user?.userCode === SUPER_ADMIN_CODE;
 
@@ -988,27 +1016,71 @@ export default function DashboardPage() {
     setPaymentsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res   = await fetch(`/api/users/${userId}/payments`, { headers: { Authorization: `Bearer ${token}` } });
-      const data  = await res.json();
-      if (data.success) { setPayments(data.data); setPortfolio(data.portfolio || null); }
-    } catch (e) { console.error(e); }
-    finally { setPaymentsLoading(false); }
+      if (!token) {
+        toast.error("Session expired. Please login again.");
+        localStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
+      const res = await fetch(`/api/users/${userId}/payments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.status === 403) {
+        toast.error(data.message || "You don't have permission.");
+        if (data.message?.includes("token") || data.message?.includes("unauthorized")) {
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+        return;
+      }
+      if (data.success) {
+        setPayments(data.data);
+        setPortfolio(data.portfolio || null);
+      } else {
+        toast.error(data.message || "Failed to load payments");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Error fetching payments");
+    } finally {
+      setPaymentsLoading(false);
+    }
   };
 
+  // ⭐ Updated fetchTreeData with 403 handling
   const fetchTreeData = async (userId: string) => {
     setTreeLoading(true);
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Session expired. Please login again.");
+        localStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
       const res = await fetch(`/api/tree/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      if (res.status === 403) {
+        toast.error(data.message || "You don't have permission to view this network.");
+        setTreeData(null);
+        if (data.message?.includes("token") || data.message?.includes("unauthorized")) {
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+        return;
+      }
       if (data.success) {
         const normalized = normalizeTreeNode(data.data);
         setTreeData(normalized);
+      } else {
+        toast.error(data.message || "Failed to load network data");
       }
     } catch (e) {
       console.error("Error fetching tree:", e);
+      toast.error("Network error. Please try again.");
     } finally {
       setTreeLoading(false);
     }
@@ -1025,7 +1097,6 @@ export default function DashboardPage() {
     return { downlineInvestment, branchInvestment };
   }
 
-  // ⭐ Updated submit with loader
   const handleAddPayment = async () => {
     if (!user || !paymentForm.amount || !paymentForm.screenshot) {
       toast.error("Please fill all required fields!");
@@ -1036,9 +1107,15 @@ export default function DashboardPage() {
       toast.error("Investment must be between 50 and 5,000 USDT!");
       return;
     }
-    setSubmitting(true); // ⭐ start loading
+    setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Session expired.");
+        localStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
       const fd = new FormData();
       fd.append("amount", paymentForm.amount);
       fd.append("description", paymentForm.description);
@@ -1046,8 +1123,20 @@ export default function DashboardPage() {
       fd.append("monthlyRate", String(paymentForm.monthlyRate));
       fd.append("maxMonths", String(paymentForm.maxMonths));
 
-      const res  = await fetch(`/api/users/${user._id}/payments`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
+      const res = await fetch(`/api/users/${user._id}/payments`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
       const data = await res.json();
+      if (res.status === 403) {
+        toast.error(data.message || "Unauthorized");
+        if (data.message?.includes("token") || data.message?.includes("unauthorized")) {
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+        return;
+      }
       if (data.success) {
         toast.success(`Investment submitted! ${data.data.note || ""}`);
         setPaymentForm({ amount: "", description: "", screenshot: null, monthlyRate: 0.08, maxMonths: 25 });
@@ -1060,7 +1149,7 @@ export default function DashboardPage() {
     } catch {
       toast.error("Error submitting investment");
     } finally {
-      setSubmitting(false); // ⭐ stop loading
+      setSubmitting(false);
     }
   };
 
@@ -1068,8 +1157,11 @@ export default function DashboardPage() {
     if (!user || !confirm("Delete this investment record?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res   = await fetch(`/api/users/${user._id}/payments/${paymentId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
-      const data  = await res.json();
+      const res = await fetch(`/api/users/${user._id}/payments/${paymentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
       if (data.success) {
         toast.success("Payment deleted");
         fetchPayments(user._id);
