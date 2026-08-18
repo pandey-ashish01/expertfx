@@ -10,11 +10,11 @@ import {
   Copy, Zap, BarChart3, Wallet, Star, Shield, Activity,
   ShieldCheck, Network, ChevronDown, ChevronRight,
   FileText, ArrowLeft, Globe, Sparkles, Rocket, Award, Flame,
-  Link2                               // <-- new icon for Connect Broker
+  Link2
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import ProfitDistributionPanel from "@/components/ProfitDistribution";
-import { useRouter } from "next/navigation";   // <-- CORRECTED IMPORT for App Router
+import { useRouter } from "next/navigation";
 
 // ---------- Interfaces ----------
 interface Payment {
@@ -23,9 +23,10 @@ interface Payment {
   screenshot: string;
   description?: string;
   status: "pending" | "approved" | "rejected";
-  dailyInterest?: number;
-  maxInterest?: number;
+  monthlyRate?: number;
   maxMonths?: number;
+  dailyInterestRate?: number;
+  maxInterest?: number;
   createdAt: string;
   investmentCalc?: {
     daysElapsed: number;
@@ -99,6 +100,8 @@ interface PaymentFormData {
   amount: string;
   description: string;
   screenshot: File | null;
+  monthlyRate: number;
+  maxMonths: number;
 }
 
 interface PasswordFormData {
@@ -107,14 +110,10 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
-const MONTHLY_RATE = 0.08;
-const DAYS_PER_MONTH = 30;
-const DEFAULT_MAX_MONTHS = 24;
-const REFERRAL_MAX_MONTHS = 30;
 const SUPER_ADMIN_CODE = "EXPERT000";
 
-function getDailyInterest(amount: number) {
-  return (amount * MONTHLY_RATE) / DAYS_PER_MONTH;
+function getDailyInterest(amount: number, monthlyRate: number) {
+  return (amount * monthlyRate) / 30;
 }
 
 function getStatusConfig(status: string) {
@@ -161,6 +160,8 @@ interface AdminPayment {
   userCode: string;
   userMobile: string;
   userId: string;
+  monthlyRate?: number;
+  maxMonths?: number;
 }
 
 function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string }) {
@@ -310,6 +311,11 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                   <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
                     {new Date(payment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
+                  {payment.monthlyRate && (
+                    <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                      {(payment.monthlyRate * 100).toFixed(1)}% · {payment.maxMonths || 25}mo
+                    </p>
+                  )}
                 </div>
                 <button onClick={() => window.open(payment.screenshot, "_blank")} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs md:text-sm transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
                   <Eye className="w-3.5 h-3.5" /> View
@@ -894,7 +900,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const router = useRouter();   // <-- now from next/navigation
+  const router = useRouter();
 
   const [activeTab, setActiveTab]   = useState("dashboard");
   const [user, setUser]             = useState<UserData | null>(null);
@@ -918,8 +924,16 @@ export default function DashboardPage() {
   });
 
   const [paymentForm, setPaymentForm] = useState<PaymentFormData>({
-    amount: "", description: "", screenshot: null,
+    amount: "",
+    description: "",
+    screenshot: null,
+    monthlyRate: 0.08,
+    maxMonths: 25,
   });
+
+  const [treeData, setTreeData] = useState<UserNode | null>(null);
+  const [treeLoading, setTreeLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false); // ⭐ loader for submit
 
   const isAdmin = user?.userCode === SUPER_ADMIN_CODE;
 
@@ -942,7 +956,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return;
-    if (activeTab === "investments") fetchPayments(user._id);
+    if (activeTab === "investments") {
+      fetchPayments(user._id);
+      fetchTreeData(user._id);
+    }
   }, [activeTab, user]);
 
   const fetchUserDetails = async (userId: string, token: string) => {
@@ -978,6 +995,37 @@ export default function DashboardPage() {
     finally { setPaymentsLoading(false); }
   };
 
+  const fetchTreeData = async (userId: string) => {
+    setTreeLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/tree/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        const normalized = normalizeTreeNode(data.data);
+        setTreeData(normalized);
+      }
+    } catch (e) {
+      console.error("Error fetching tree:", e);
+    } finally {
+      setTreeLoading(false);
+    }
+  };
+
+  function computeBranchInvestmentFrontend(node: UserNode): { downlineInvestment: number; branchInvestment: number } {
+    let downlineSum = 0;
+    for (const child of node.children) {
+      const childResult = computeBranchInvestmentFrontend(child);
+      downlineSum += childResult.branchInvestment;
+    }
+    const downlineInvestment = downlineSum;
+    const branchInvestment = node.paymentSummary.totalInvested + downlineInvestment;
+    return { downlineInvestment, branchInvestment };
+  }
+
+  // ⭐ Updated submit with loader
   const handleAddPayment = async () => {
     if (!user || !paymentForm.amount || !paymentForm.screenshot) {
       toast.error("Please fill all required fields!");
@@ -988,24 +1036,31 @@ export default function DashboardPage() {
       toast.error("Investment must be between 50 and 5,000 USDT!");
       return;
     }
+    setSubmitting(true); // ⭐ start loading
     try {
       const token = localStorage.getItem("token");
       const fd = new FormData();
       fd.append("amount", paymentForm.amount);
       fd.append("description", paymentForm.description);
       fd.append("screenshot", paymentForm.screenshot);
+      fd.append("monthlyRate", String(paymentForm.monthlyRate));
+      fd.append("maxMonths", String(paymentForm.maxMonths));
+
       const res  = await fetch(`/api/users/${user._id}/payments`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
       const data = await res.json();
       if (data.success) {
         toast.success(`Investment submitted! ${data.data.note || ""}`);
-        setPaymentForm({ amount: "", description: "", screenshot: null });
+        setPaymentForm({ amount: "", description: "", screenshot: null, monthlyRate: 0.08, maxMonths: 25 });
         setShowAddPayment(false);
         fetchPayments(user._id);
+        fetchTreeData(user._id);
       } else {
         toast.error(data.message || "Error submitting investment");
       }
     } catch {
       toast.error("Error submitting investment");
+    } finally {
+      setSubmitting(false); // ⭐ stop loading
     }
   };
 
@@ -1018,6 +1073,7 @@ export default function DashboardPage() {
       if (data.success) {
         toast.success("Payment deleted");
         fetchPayments(user._id);
+        fetchTreeData(user._id);
       } else {
         toast.error(data.message || "Error deleting");
       }
@@ -1119,7 +1175,6 @@ export default function DashboardPage() {
   const approvedPayments = payments.filter(p => p.status === "approved");
   const pendingPayments  = payments.filter(p => p.status === "pending");
 
-  // Define tabs – add "connectBroker" at the end
   const tabs = [
     { id: "dashboard",   label: "Dashboard",  icon: BarChart3 },
     { id: "investments", label: "Investments", icon: TrendingUp },
@@ -1131,13 +1186,12 @@ export default function DashboardPage() {
     { id: "share",       label: "Share",       icon: Share2 },
     { id: "settings",    label: "Settings",    icon: Settings },
     ...(isAdmin ? [{ id: "admin", label: "Admin", icon: ShieldCheck }] : []),
-    { id: "connectBroker", label: "Connect Broker", icon: Link2 },   // <-- new tab
+    { id: "connectBroker", label: "Connect Broker", icon: Link2 },
   ];
 
-  // Helper to handle tab clicks
   const handleTabClick = (tabId: string) => {
     if (tabId === "connectBroker") {
-      router.push("/connect-broker");   // navigate to the page
+      router.push("/connect-broker");
     } else {
       setActiveTab(tabId);
     }
@@ -1288,7 +1342,6 @@ export default function DashboardPage() {
       case "share":       return renderShare();
       case "settings":    return renderSettings();
       case "admin":       return isAdmin ? <AdminPanel isDarkMode={isDarkMode} card={card} /> : renderDashboard();
-      // connectBroker is not handled here because we navigate away
       default:            return renderDashboard();
     }
   }
@@ -1297,6 +1350,10 @@ export default function DashboardPage() {
   function renderDashboard() {
     const totalInterestEarned = approvedPayments.reduce((sum, p) => sum + (p.investmentCalc?.totalInterest || 0), 0);
     const totalInvested       = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
+    const totalDailyReturn    = approvedPayments.reduce((sum, p) => {
+      const rate = p.monthlyRate ?? 0.08;
+      return sum + getDailyInterest(p.amount, rate);
+    }, 0);
 
     return (
       <div className="space-y-4 md:space-y-5 max-w-4xl mx-auto">
@@ -1324,7 +1381,7 @@ export default function DashboardPage() {
           {[
             { label: "Total Invested",  value: `${totalInvested.toFixed(2)} USDT`,              icon: Wallet,     color: "from-blue-500 to-blue-600",       sub: `${approvedPayments.length} active`  },
             { label: "Interest Earned", value: `${totalInterestEarned.toFixed(4)} USDT`,         icon: TrendingUp, color: "from-emerald-500 to-emerald-600", sub: "Total so far"                       },
-            { label: "Daily Return",    value: `${approvedPayments.reduce((s, p) => s + (p.investmentCalc?.dailyInterest || 0), 0).toFixed(4)} USDT`, icon: Activity, color: "from-amber-500 to-orange-500", sub: "Per day" },
+            { label: "Daily Return",    value: `${totalDailyReturn.toFixed(4)} USDT`, icon: Activity, color: "from-amber-500 to-orange-500", sub: "Per day" },
             { label: "Pending",         value: `${pendingPayments.length}`,                      icon: Clock,      color: "from-purple-500 to-purple-600",   sub: "Awaiting approval"                  },
           ].map((stat, i) => (
             <div key={i} className={`${card} p-2.5 md:p-4 relative overflow-hidden`}>
@@ -1348,7 +1405,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {approvedPayments.slice(0, 3).map(payment => {
                   const calc     = payment.investmentCalc;
-                  const maxMo    = payment.maxMonths || DEFAULT_MAX_MONTHS;
+                  const maxMo    = payment.maxMonths ?? 25;
                   const progress = calc ? Math.min((calc.daysElapsed / (maxMo * 30)) * 100, 100) : 0;
                   return (
                     <div key={payment._id} className={`p-3 md:p-4 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
@@ -1356,6 +1413,9 @@ export default function DashboardPage() {
                         <div className="min-w-0">
                           <p className="font-bold text-sm md:text-base">{payment.amount} USDT</p>
                           <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{new Date(payment.createdAt).toLocaleDateString()}</p>
+                          <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                            {(payment.monthlyRate ?? 0.08) * 100}% · {maxMo}mo
+                          </p>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-emerald-400 font-bold text-sm">{calc?.totalInterest.toFixed(4)} USDT</p>
@@ -1403,7 +1463,7 @@ export default function DashboardPage() {
             </div>
             <h3 className="font-bold text-base md:text-lg mb-2">Start Investing</h3>
             <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-4`}>
-              Invest 50–5,000 USDT and earn 8% monthly interest for up to {DEFAULT_MAX_MONTHS} months
+              Invest 50–5,000 USDT and earn attractive monthly returns with flexible plans.
             </p>
             <button onClick={() => setActiveTab("investments")} className="bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition-all text-sm">
               Make First Investment
@@ -1414,13 +1474,15 @@ export default function DashboardPage() {
     );
   }
 
- // ─── Investments Render ────────────────────────────────────────────────────
+  // ─── Investments Render ────────────────────────────────────────────────────
   function renderInvestments() {
-    const amountVal       = parseFloat(paymentForm.amount) || 0;
-    const dailyInterest   = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal) : 0;
-    const monthlyInterest = amountVal * MONTHLY_RATE;
+    const amountVal = parseFloat(paymentForm.amount) || 0;
+    const selectedRate = paymentForm.monthlyRate;
+    const selectedMonths = paymentForm.maxMonths;
+    const dailyInterest = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal, selectedRate) : 0;
+    const monthlyInterest = amountVal * selectedRate;
+    const maxReturn = amountVal * selectedRate * selectedMonths;
 
-    // ── Pricing Plans ──
     const plans = [
       {
         amount: 100,
@@ -1434,6 +1496,8 @@ export default function DashboardPage() {
         ring: "hover:ring-amber-400/40",
         features: ["Instant activation", "Daily payout", "24 months validity", "Referral bonus"],
         highlight: false,
+        monthlyRate: 0.08,
+        maxMonths: 24,
       },
       {
         amount: 200,
@@ -1447,6 +1511,8 @@ export default function DashboardPage() {
         ring: "hover:ring-blue-400/40",
         features: ["Instant activation", "Daily payout", "24 months validity", "Referral bonus"],
         highlight: false,
+        monthlyRate: 0.08,
+        maxMonths: 24,
       },
       {
         amount: 500,
@@ -1458,8 +1524,10 @@ export default function DashboardPage() {
         glow: "shadow-[0_10px_30px_-6px_rgba(239,68,68,0.45)]",
         glowHover: "hover:shadow-[0_16px_40px_-8px_rgba(239,68,68,0.6)]",
         ring: "hover:ring-red-500/50",
-        features: ["Instant activation", "Daily payout", "24 months validity", "Priority support"],
+        features: ["Instant activation", "Daily payout", "30 months validity", "Priority support"],
         highlight: true,
+        monthlyRate: 0.10,
+        maxMonths: 30,
       },
       {
         amount: 1000,
@@ -1471,18 +1539,35 @@ export default function DashboardPage() {
         glow: "shadow-[0_8px_24px_-8px_rgba(168,85,247,0.35)]",
         glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.5)]",
         ring: "hover:ring-purple-400/40",
-        features: ["Instant activation", "Daily payout", "24 months validity", "Priority support"],
+        features: ["Instant activation", "Daily payout", "36 months validity", "Priority support"],
         highlight: false,
+        monthlyRate: 0.12,
+        maxMonths: 36,
       },
     ];
 
-    const selectPlan = (amt: number) => {
-      setPaymentForm({ ...paymentForm, amount: String(amt) });
+    const selectPlan = (plan: typeof plans[0]) => {
+      setPaymentForm({
+        ...paymentForm,
+        amount: String(plan.amount),
+        monthlyRate: plan.monthlyRate,
+        maxMonths: plan.maxMonths,
+      });
       setShowAddPayment(true);
       setTimeout(() => {
         document.getElementById("investment-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 50);
     };
+
+    let branchStats = { personal: 0, downline: 0, branch: 0 };
+    if (treeData && !treeLoading) {
+      const stats = computeBranchInvestmentFrontend(treeData);
+      branchStats = {
+        personal: treeData.paymentSummary.totalInvested,
+        downline: stats.downlineInvestment,
+        branch: stats.branchInvestment,
+      };
+    }
 
     return (
       <div className="space-y-5 max-w-5xl mx-auto">
@@ -1490,18 +1575,48 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <h1 className="text-lg md:text-2xl font-black">Investments</h1>
             <p className={`flex items-center gap-1.5 text-xs md:text-sm font-bold mt-0.5 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>
-              <TrendingUp className="w-3.5 h-3.5" /> Monthly Approx 40% – 50% Profits
+              <TrendingUp className="w-3.5 h-3.5" /> Dynamic plans with up to 12% monthly
             </p>
           </div>
           <button
-            onClick={() => setShowAddPayment(!showAddPayment)}
+            onClick={() => {
+              setPaymentForm({ ...paymentForm, monthlyRate: 0.08, maxMonths: 25 });
+              setShowAddPayment(!showAddPayment);
+            }}
             className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-[length:200%_auto] hover:bg-right text-white font-bold px-3.5 md:px-5 py-2.5 md:py-3 rounded-lg text-xs md:text-sm flex-shrink-0 shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_8px_26px_-4px_rgba(239,68,68,0.65)] ring-1 ring-white/10 transition-all duration-300 active:scale-95"
           >
             <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Custom Amount
           </button>
         </div>
 
-        {/* ── Pricing Plan Cards ── */}
+        {/* Branch Investment Stats */}
+        {treeData && !treeLoading && (
+          <div className={`${card} p-4`}>
+            <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+              <Network className="w-4 h-4 text-red-400" />
+              Your Network Investment Weight
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Personal</p>
+                <p className="font-bold text-base">{branchStats.personal} USDT</p>
+              </div>
+              <div className="text-center">
+                <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Downline</p>
+                <p className="font-bold text-base text-blue-400">{branchStats.downline} USDT</p>
+              </div>
+              <div className="text-center">
+                <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Branch (Total)</p>
+                <p className="font-bold text-base text-emerald-400">{branchStats.branch} USDT</p>
+              </div>
+            </div>
+            <p className={`text-xs mt-3 ${isDarkMode ? "text-gray-500" : "text-gray-400"} text-center`}>
+              Your level income is calculated based on <strong>Branch Investment</strong> – your personal + entire downline.
+            </p>
+          </div>
+        )}
+
+        {/* Pricing Plan Cards */}
         <div>
           <div className={`flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden`} style={{ scrollbarWidth: "none" }}>
             {plans.map((plan) => {
@@ -1548,6 +1663,10 @@ export default function DashboardPage() {
                       <span className={`text-xs font-bold ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>USDT</span>
                     </div>
 
+                    <div className={`text-xs mb-3 font-semibold ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>
+                      {(plan.monthlyRate * 100).toFixed(0)}% monthly · {plan.maxMonths} months
+                    </div>
+
                     <div className={`h-px w-full mb-3 ${isDarkMode ? "bg-white/10" : "bg-gray-100"}`} />
 
                     <div className="space-y-1.5 mb-4">
@@ -1562,7 +1681,7 @@ export default function DashboardPage() {
                     </div>
 
                     <button
-                      onClick={() => selectPlan(plan.amount)}
+                      onClick={() => selectPlan(plan)}
                       className={`w-full py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 ${
                         plan.highlight
                           ? `bg-gradient-to-r ${plan.accent} bg-[length:180%_auto] hover:bg-right text-white shadow-lg ${plan.glow} ring-1 ring-white/10`
@@ -1583,7 +1702,10 @@ export default function DashboardPage() {
 
         {/* Mobile floating custom-amount button */}
         <button
-          onClick={() => setShowAddPayment(!showAddPayment)}
+          onClick={() => {
+            setPaymentForm({ ...paymentForm, monthlyRate: 0.08, maxMonths: 25 });
+            setShowAddPayment(!showAddPayment);
+          }}
           className="sm:hidden w-full flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-gray-300 font-semibold px-4 py-3 rounded-lg text-xs transition-all active:scale-[0.98] hover:bg-white/[0.08]"
         >
           <Plus className="w-3.5 h-3.5" /> Enter a custom amount instead
@@ -1614,7 +1736,10 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div><p className="text-xs text-gray-500 mb-0.5">Daily</p><p className="font-bold text-emerald-400 text-xs md:text-sm">{dailyInterest.toFixed(4)} USDT</p></div>
                         <div><p className="text-xs text-gray-500 mb-0.5">Monthly</p><p className="font-bold text-emerald-400 text-xs md:text-sm">{monthlyInterest.toFixed(2)} USDT</p></div>
-                        <div><p className="text-xs text-gray-500 mb-0.5">Max Return</p><p className="font-bold text-amber-400 text-xs md:text-sm">{(amountVal * 2).toFixed(0)} USDT</p></div>
+                        <div><p className="text-xs text-gray-500 mb-0.5">Max Return</p><p className="font-bold text-amber-400 text-xs md:text-sm">{maxReturn.toFixed(0)} USDT</p></div>
+                      </div>
+                      <div className="mt-2 text-center text-xs text-gray-500">
+                        Rate: {(selectedRate * 100).toFixed(0)}% · {selectedMonths} months
                       </div>
                     </div>
                   )}
@@ -1690,8 +1815,19 @@ export default function DashboardPage() {
                   <p className="text-xs text-red-300">Investment will be <strong>pending</strong> until Super Admin approves it.</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={handleAddPayment} disabled={!paymentForm.amount || !paymentForm.screenshot || amountVal < 50 || amountVal > 5000} className="flex-1 bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-[length:200%_auto] hover:bg-right text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_8px_26px_-4px_rgba(239,68,68,0.65)] transition-all duration-300 active:scale-[0.98]">
-                    Submit Investment
+                  <button
+                    onClick={handleAddPayment}
+                    disabled={!paymentForm.amount || !paymentForm.screenshot || amountVal < 50 || amountVal > 5000 || submitting}
+                    className="flex-1 bg-gradient-to-r from-red-500 via-red-600 to-red-500 bg-[length:200%_auto] hover:bg-right text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_8px_26px_-4px_rgba(239,68,68,0.65)] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Investment"
+                    )}
                   </button>
                   <button onClick={() => setShowAddPayment(false)} className={`px-4 py-3 rounded-lg border text-sm transition-colors ${isDarkMode ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"}`}>Cancel</button>
                 </div>
@@ -1713,7 +1849,8 @@ export default function DashboardPage() {
               const statusCfg  = getStatusConfig(payment.status);
               const StatusIcon = statusCfg.icon;
               const calc       = payment.investmentCalc;
-              const maxMo      = payment.maxMonths || DEFAULT_MAX_MONTHS;
+              const maxMo      = payment.maxMonths ?? 25;
+              const rate       = payment.monthlyRate ?? 0.08;
               return (
                 <div key={payment._id} className={`${card} !rounded-xl transition-all duration-300 hover:-translate-y-0.5 ${isDarkMode ? "hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] hover:border-white/10" : "hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]"}`}>
                   <div className="p-3 md:p-4">
@@ -1726,6 +1863,9 @@ export default function DashboardPage() {
                           <p className="font-bold text-sm md:text-base">{payment.amount} <span className="text-xs md:text-sm font-normal text-gray-400">USDT</span></p>
                           <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
                             {new Date(payment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          </p>
+                          <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                            {(rate * 100).toFixed(1)}% · {maxMo}mo
                           </p>
                         </div>
                       </div>
@@ -1764,7 +1904,9 @@ export default function DashboardPage() {
                     {payment.status === "pending" && (
                       <div className={`rounded-lg p-2.5 flex items-center gap-2 ${isDarkMode ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
                         <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                        <p className="text-xs text-amber-300">Awaiting approval. Daily interest of <strong>{getDailyInterest(payment.amount).toFixed(4)} USDT</strong> starts once approved.</p>
+                        <p className="text-xs text-amber-300">
+                          Awaiting approval. Daily interest of <strong>{getDailyInterest(payment.amount, rate).toFixed(4)} USDT</strong> starts once approved.
+                        </p>
                       </div>
                     )}
                     {payment.description && <p className={`text-xs mt-2 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{payment.description}</p>}
@@ -2022,7 +2164,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-lg md:text-2xl font-black">Share & Earn</h1>
           <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-            Invite friends to extend your investment to {REFERRAL_MAX_MONTHS} months
+            Invite friends to extend your investment duration
           </p>
         </div>
         <div className={`${card} p-3 md:p-4`}>
@@ -2033,7 +2175,7 @@ export default function DashboardPage() {
             <div>
               <p className="font-bold text-sm">Referral Bonus</p>
               <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                Invite → your plan extends to <strong className="text-red-400">{REFERRAL_MAX_MONTHS} months</strong>
+                Invite friends – your plan extends up to 35 months
               </p>
             </div>
           </div>
@@ -2049,7 +2191,7 @@ export default function DashboardPage() {
               <div className={`p-3 rounded-xl ${isDarkMode ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"}`}>
                 <p className={`text-xs font-bold mb-0.5 ${isDarkMode ? "text-red-300" : "text-red-700"}`}>Code: {user!.userCode}</p>
                 <p className={`text-xs ${isDarkMode ? "text-red-400/70" : "text-red-600"}`}>
-                  Share this code to extend plan from {DEFAULT_MAX_MONTHS} to {REFERRAL_MAX_MONTHS} months!
+                  Share this code to extend your plan duration.
                 </p>
               </div>
             </>

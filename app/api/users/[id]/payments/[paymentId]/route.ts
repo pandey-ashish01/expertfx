@@ -1,4 +1,3 @@
-// app/api/users/[id]/payments/[paymentId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/config/db";
 import User from "@/lib/models/User";
@@ -14,7 +13,6 @@ async function verifyToken(token: string): Promise<any> {
   }
 }
 
-// DELETE - remove a payment
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string; paymentId: string }> }
@@ -39,7 +37,6 @@ export async function DELETE(
     const payment = user.payments.id(paymentId);
     if (!payment) return NextResponse.json({ success: false, message: "Payment not found" }, { status: 404 });
 
-    // Only allow deleting pending payments
     if (payment.status === "approved") {
       return NextResponse.json({ success: false, message: "Cannot delete an approved investment!" }, { status: 400 });
     }

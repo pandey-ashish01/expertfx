@@ -21,7 +21,6 @@ export interface TreeNode {
   branchInvestment: number;
 }
 
-
 export function buildTree(users: UserLean[]) {
   const map: Record<string, TreeNode> = {};
 
@@ -46,24 +45,22 @@ export function buildTree(users: UserLean[]) {
     if (u.parentId && map[u.parentId.toString()]) {
       map[u.parentId.toString()].children.push(node);
     } else {
-      roots.push(node); // parentId null => top-level root
+      roots.push(node);
     }
   });
 
   return { map, roots };
 }
 
-
 export function computeBranchInvestment(node: TreeNode): number {
   let downlineSum = 0;
   for (const child of node.children) {
-    downlineSum += computeBranchInvestment(child); // recursive call
+    downlineSum += computeBranchInvestment(child);
   }
   node.downlineInvestment = downlineSum;
   node.branchInvestment = node.personalInvestment + downlineSum;
   return node.branchInvestment;
 }
-
 
 export function groupByLevel(roots: TreeNode[]): Record<number, TreeNode[]> {
   const levels: Record<number, TreeNode[]> = {};
@@ -77,10 +74,8 @@ export function groupByLevel(roots: TreeNode[]): Record<number, TreeNode[]> {
   }
 
   roots.forEach((root) => traverse(root, 0));
-
   return levels;
 }
-
 
 export function findNodeById(
   map: Record<string, TreeNode>,

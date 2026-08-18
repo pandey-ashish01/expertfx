@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// ⭐ DYNAMIC: Payment schema now includes monthlyRate and maxMonths
 const PaymentSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   screenshot: { type: String, required: true },
@@ -9,6 +10,10 @@ const PaymentSchema = new mongoose.Schema({
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
+  monthlyRate: { type: Number, required: true, default: 0.08 },
+  maxMonths: { type: Number, required: true, default: 25 },
+  dailyInterestRate: { type: Number, default: null },
+  maxInterest: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -42,17 +47,12 @@ const UserSchema = new mongoose.Schema(
     userCode: { type: String, default: "", unique: true, sparse: true },
     referralToken: { type: String, default: "" },
 
-    // Wallet fields
-    walletNetwork: { type: String, default: "" }, // e.g., "USDT-BEP20"
+    walletNetwork: { type: String, default: "" },
     walletAddress: { type: String, default: "" },
-
-    // MT5 fields
     mt5Email: { type: String, default: "", trim: true, lowercase: true },
     mt5Account: { type: String, default: "" },
 
-    // NEW: running wallet balance, credited by profit distribution
     walletBalance: { type: Number, default: 0 },
-
     pan: { type: String, default: "" },
 
     parentId: {
