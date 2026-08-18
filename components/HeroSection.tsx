@@ -69,7 +69,7 @@ const PARTNERS = [
 const SERVICES = [
   {
     title: "Forex Trading",
-    desc: "Access 60+ currency pairs with spreads from 0.0 pips and lightning-fast execution.",
+    desc: "Access 60++ currency pairs with spreads from 0.0 pips and lightning-fast execution.",
     features: ["60+ Currency Pairs", "Spreads from 0.0 pips", "Leverage up to 1:500"],
     image: "/images/forex.jpg",
     icon: (
