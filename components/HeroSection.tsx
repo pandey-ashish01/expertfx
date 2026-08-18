@@ -59,7 +59,7 @@ const CARDS = [
 ] as const;
 
 const PARTNERS = [
-  { name: "Goldman Sachs", logo: "GS" },
+  { name: "Goldman Sachs", logo: "Gs" },
   { name: "Morgan Stanley", logo: "MS" },
   { name: "BlackRock", logo: "BLK" },
   { name: "Vanguard", logo: "VG" },
