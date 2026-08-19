@@ -72,7 +72,7 @@ const offers: Record<OfferKey, Offer> = {
     partnerLabel: "Partner Code",
     partnerHint: "Your partner reference",
     ctaLabel: "Join Copy Trading",
-    redirectUrl: "https://social.tp-redirect.com/s/0mYnoB8R",
+    redirectUrl: "https://social.tp-redirect.com/s/jRVOow3g",
     footerNote:
       "Copy trading does not guarantee profits. Past performance does not guarantee future results.",
   },
