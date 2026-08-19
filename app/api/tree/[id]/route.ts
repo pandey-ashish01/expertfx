@@ -2,13 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/config/db";
 import User from "@/lib/models/User";
+import Distribution from "@/lib/models/Distribution";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
-
-const MONTHLY_RATE = 0.08;
-const DAYS_PER_MONTH = 30;
-const DEFAULT_MAX_MONTHS = 24;
 
 async function verifyToken(token: string): Promise<any> {
   try {
@@ -38,25 +35,28 @@ interface UserNode {
   paymentSummary: PaymentSummary;
 }
 
-function calcInterestEarned(payments: any[]): number {
-  const approved = payments.filter((p: any) => p.status === "approved");
-  return approved.reduce((sum: number, p: any) => {
-    const approvedAt = new Date(p.updatedAt || p.createdAt).getTime();
-    const now = Date.now();
-    const daysElapsed = Math.max(
-      0,
-      Math.floor((now - approvedAt) / (1000 * 60 * 60 * 24))
-    );
-    const dailyInterest = (p.amount * MONTHLY_RATE) / DAYS_PER_MONTH;
-    const maxMonths = p.maxMonths || DEFAULT_MAX_MONTHS;
-    const maxInterest = p.amount * MONTHLY_RATE * maxMonths;
-    return sum + Math.min(daysElapsed * dailyInterest, maxInterest);
-  }, 0);
+/**
+ * Builds a map of userId -> total real income earned from all past
+ * profit distributions. This replaces the old formula-based
+ * calcInterestEarned() which fabricated numbers from time elapsed.
+ */
+async function buildIncomeMap(): Promise<Map<string, number>> {
+  const distributions = await Distribution.find({}).select("entries").lean();
+  const map = new Map<string, number>();
+  for (const dist of distributions as any[]) {
+    for (const entry of dist.entries || []) {
+      const uid = entry.userId?.toString();
+      if (!uid) continue;
+      map.set(uid, (map.get(uid) || 0) + (entry.income || 0));
+    }
+  }
+  return map;
 }
 
 async function buildTreeFromParentId(
   rootId: string,
   allUsers: any[],
+  incomeMap: Map<string, number>,
   currentDepth: number = 0,
   maxDepth: number = 20
 ): Promise<UserNode | null> {
@@ -76,10 +76,10 @@ async function buildTreeFromParentId(
     ),
     approvedCount: approvedPayments.length,
     pendingCount: pendingPayments.length,
-    totalInterestEarned: calcInterestEarned(payments),
+    // ⭐ REAL data from Distribution records — not a formula
+    totalInterestEarned: incomeMap.get(user._id.toString()) || 0,
   };
 
-  // Find children by parentId
   const childUsers = allUsers.filter(
     (u) => u.parentId && u.parentId.toString() === user._id.toString()
   );
@@ -90,6 +90,7 @@ async function buildTreeFromParentId(
         buildTreeFromParentId(
           child._id.toString(),
           allUsers,
+          incomeMap,
           currentDepth + 1,
           maxDepth
         )
@@ -156,7 +157,10 @@ export async function GET(
       .select("name mobile email userCode referralToken parentId children payments maxInvestmentMonths")
       .lean();
 
-    const tree = await buildTreeFromParentId(id, allUsers);
+    // ⭐ Build real income map from Distribution collection
+    const incomeMap = await buildIncomeMap();
+
+    const tree = await buildTreeFromParentId(id, allUsers, incomeMap);
 
     if (!tree) {
       return NextResponse.json(

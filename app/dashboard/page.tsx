@@ -25,14 +25,12 @@ interface Payment {
   status: "pending" | "approved" | "rejected";
   monthlyRate?: number;
   maxMonths?: number;
-  dailyInterestRate?: number;
-  maxInterest?: number;
   createdAt: string;
+  // ⭐ investmentCalc is now PURELY time/progress info.
+  // No dollar amounts are computed by formula anymore —
+  // real earnings live in portfolio.totalInterestEarned (wallet-based).
   investmentCalc?: {
     daysElapsed: number;
-    dailyInterest: number;
-    totalInterest: number;
-    maxInterest: number;
     isMatured: boolean;
     maturityDate: string;
   };
@@ -137,10 +135,6 @@ function getRateAndMonths(branch: number): { rate: number; months: number } {
 //   console.log(`${prefix}${node.name} (${node.userCode}) – Personal: ${node.paymentSummary.totalInvested}, Branch: ${branch}, Rate: ${(rate*100).toFixed(0)}%`);
 //   node.children.forEach(child => debugTree(child, prefix + "  "));
 // }
-
-function getDailyInterest(amount: number, monthlyRate: number) {
-  return (amount * monthlyRate) / 30;
-}
 
 function getStatusConfig(status: string) {
   switch (status) {
@@ -375,7 +369,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
   );
 }
 
-// ─── Network Panel (UPDATED) ────────────────────────────────────────────────
+// ─── Network Panel ────────────────────────────────────────────────
 
 function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode: boolean; card: string }) {
   const [hierarchyData, setHierarchyData] = useState<UserNode | null>(null);
@@ -498,7 +492,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
             {[
               { label: "Invested",  value: `${ps.totalInvested} USDT`,                  icon: Wallet,      color: "text-blue-400"    },
               { label: "Branch",    value: `${branchTotal} USDT`,                       icon: Network,     color: "text-purple-400"  },
-              { label: "Interest",  value: `${ps.totalInterestEarned.toFixed(2)} USDT`, icon: TrendingUp,  color: "text-emerald-400" },
+              { label: "Earned",    value: `${ps.totalInterestEarned.toFixed(2)} USDT`, icon: TrendingUp,  color: "text-emerald-400" },
               { label: "Approved",  value: `${ps.approvedCount} plans`,                 icon: CheckCircle, color: "text-emerald-400" },
             ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="text-center">
@@ -569,7 +563,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
   );
 }
 
-// ─── Membership Component (unchanged) ──────────────────────────────────────
+// ─── Membership Component ──────────────────────────────────────
 
 interface LevelStats {
   level: number;
@@ -742,7 +736,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
                   <th className="px-4 py-3 text-left hidden md:table-cell">Code</th>
                   <th className="px-4 py-3 text-left hidden md:table-cell">Mobile</th>
                   <th className="px-4 py-3 text-right">Invested</th>
-                  <th className="px-4 py-3 text-right hidden sm:table-cell">Interest</th>
+                  <th className="px-4 py-3 text-right hidden sm:table-cell">Earned</th>
                   <th className="px-4 py-3 text-center">Status</th>
                 </tr>
               </thead>
@@ -1513,15 +1507,16 @@ export default function DashboardPage() {
     }
   }
 
-  // ─── Dashboard Render (unchanged) ────────────────────────────────────────
+  // ─── Dashboard Render (FIXED — real wallet-based earnings only) ────────────
 
   function renderDashboard() {
-    const totalInterestEarned = approvedPayments.reduce((sum, p) => sum + (p.investmentCalc?.totalInterest || 0), 0);
+    // ⭐ REAL data — comes from portfolio.totalInterestEarned which the backend
+    // now derives from user.walletBalance (credited only by actual admin
+    // profit distributions). No formula-based projection anymore.
+    const totalInterestEarned = portfolio?.totalInterestEarned || 0;
     const totalInvested       = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
-    const totalDailyReturn    = approvedPayments.reduce((sum, p) => {
-      const rate = p.monthlyRate ?? 0.08;
-      return sum + getDailyInterest(p.amount, rate);
-    }, 0);
+    // ⭐ REMOVED: totalDailyReturn — this was a pure formula (amount × rate ÷ 30)
+    // that showed money "earning" every second with no real distribution event.
 
     return (
       <div className="space-y-4 md:space-y-5 max-w-4xl mx-auto">
@@ -1547,10 +1542,10 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
           {[
-            { label: "Total Invested",  value: `${totalInvested.toFixed(2)} USDT`,              icon: Wallet,     color: "from-blue-500 to-blue-600",       sub: `${approvedPayments.length} active`  },
-            { label: "Interest Earned", value: `${totalInterestEarned.toFixed(4)} USDT`,         icon: TrendingUp, color: "from-emerald-500 to-emerald-600", sub: "Total so far"                       },
-            { label: "Daily Return",    value: `${totalDailyReturn.toFixed(4)} USDT`, icon: Activity, color: "from-amber-500 to-orange-500", sub: "Per day" },
-            { label: "Pending",         value: `${pendingPayments.length}`,                      icon: Clock,      color: "from-purple-500 to-purple-600",   sub: "Awaiting approval"                  },
+            { label: "Total Invested",  value: `${totalInvested.toFixed(2)} USDT`,        icon: Wallet,     color: "from-blue-500 to-blue-600",       sub: `${approvedPayments.length} active`      },
+            { label: "Wallet Balance",  value: `${totalInterestEarned.toFixed(2)} USDT`,   icon: TrendingUp, color: "from-emerald-500 to-emerald-600", sub: "From profit distributions"              },
+            { label: "Approved",        value: `${approvedPayments.length}`,               icon: CheckCircle,color: "from-amber-500 to-orange-500",    sub: "Active plans"                           },
+            { label: "Pending",         value: `${pendingPayments.length}`,                icon: Clock,      color: "from-purple-500 to-purple-600",   sub: "Awaiting approval"                      },
           ].map((stat, i) => (
             <div key={i} className={`${card} p-2.5 md:p-4 relative overflow-hidden`}>
               <div className={`absolute top-0 right-0 w-14 h-14 bg-gradient-to-br ${stat.color} opacity-10 rounded-full -mr-3 -mt-3`} />
@@ -1581,13 +1576,17 @@ export default function DashboardPage() {
                         <div className="min-w-0">
                           <p className="font-bold text-sm md:text-base">{payment.amount} USDT</p>
                           <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{new Date(payment.createdAt).toLocaleDateString()}</p>
-                          <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                            {(payment.monthlyRate ?? 0.08) * 100}% · {maxMo}mo
-                          </p>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="text-emerald-400 font-bold text-sm">{calc?.totalInterest.toFixed(4)} USDT</p>
-                          <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>earned</p>
+                          {/* ⭐ REMOVED: fake calc?.totalInterest "earned" figure.
+                              Real earnings only shown at portfolio level (Wallet Balance stat above). */}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            calc?.isMatured
+                              ? "bg-emerald-400/10 text-emerald-400"
+                              : "bg-blue-400/10 text-blue-400"
+                          }`}>
+                            {calc?.isMatured ? "Matured" : "Active"}
+                          </span>
                         </div>
                       </div>
                       <div className="space-y-1">
@@ -1642,88 +1641,32 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Investments Render (UPDATED) ─────────────────────────────────────────
+  // ─── Investments Render ─────────────────────────────────────────
 
   function renderInvestments() {
     const amountVal = parseFloat(paymentForm.amount) || 0;
 
-    // Compute branch investment
+    // Compute branch investment (still needed to set the hidden monthly rate & max months)
     let branchTotal = 0;
     if (treeData && !treeLoading) {
       branchTotal = computeBranchInvestment(treeData);
     }
     const { rate: dynamicRate, months: dynamicMonths } = getRateAndMonths(branchTotal);
 
-    // Build plans dynamically – all use the same rate & months
+    // Plans are still used to pre‑fill amount + hidden rate/months, but user sees no rate
     const plans = [
-      {
-        amount: 100,
-        label: "Starter",
-        tagline: "Try it out",
-        badge: "OFFER",
-        icon: Sparkles,
-        accent: "from-amber-400 to-orange-500",
-        glow: "shadow-[0_8px_24px_-8px_rgba(251,191,36,0.35)]",
-        glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(251,191,36,0.5)]",
-        ring: "hover:ring-amber-400/40",
-        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"],
-        highlight: false,
-        monthlyRate: dynamicRate,
-        maxMonths: dynamicMonths,
-      },
-      {
-        amount: 200,
-        label: "Basic",
-        tagline: "Get started",
-        badge: null,
-        icon: Rocket,
-        accent: "from-blue-400 to-cyan-500",
-        glow: "shadow-[0_8px_24px_-8px_rgba(59,130,246,0.35)]",
-        glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(59,130,246,0.5)]",
-        ring: "hover:ring-blue-400/40",
-        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"],
-        highlight: false,
-        monthlyRate: dynamicRate,
-        maxMonths: dynamicMonths,
-      },
-      {
-        amount: 500,
-        label: "Personal",
-        tagline: "Most chosen",
-        badge: "POPULAR",
-        icon: Flame,
-        accent: "from-red-500 to-orange-500",
-        glow: "shadow-[0_10px_30px_-6px_rgba(239,68,68,0.45)]",
-        glowHover: "hover:shadow-[0_16px_40px_-8px_rgba(239,68,68,0.6)]",
-        ring: "hover:ring-red-500/50",
-        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Priority support"],
-        highlight: true,
-        monthlyRate: dynamicRate,
-        maxMonths: dynamicMonths,
-      },
-      {
-        amount: 1000,
-        label: "Business",
-        tagline: "Go big",
-        badge: null,
-        icon: Award,
-        accent: "from-purple-500 to-fuchsia-500",
-        glow: "shadow-[0_8px_24px_-8px_rgba(168,85,247,0.35)]",
-        glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.5)]",
-        ring: "hover:ring-purple-400/40",
-        features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Priority support"],
-        highlight: false,
-        monthlyRate: dynamicRate,
-        maxMonths: dynamicMonths,
-      },
+      { amount: 100, label: "Starter", tagline: "Try it out", badge: "OFFER", icon: Sparkles, accent: "from-amber-400 to-orange-500", glow: "shadow-[0_8px_24px_-8px_rgba(251,191,36,0.35)]", glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(251,191,36,0.5)]", ring: "hover:ring-amber-400/40", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"], highlight: false },
+      { amount: 200, label: "Basic", tagline: "Get started", badge: null, icon: Rocket, accent: "from-blue-400 to-cyan-500", glow: "shadow-[0_8px_24px_-8px_rgba(59,130,246,0.35)]", glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(59,130,246,0.5)]", ring: "hover:ring-blue-400/40", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"], highlight: false },
+      { amount: 500, label: "Personal", tagline: "Most chosen", badge: "POPULAR", icon: Flame, accent: "from-red-500 to-orange-500", glow: "shadow-[0_10px_30px_-6px_rgba(239,68,68,0.45)]", glowHover: "hover:shadow-[0_16px_40px_-8px_rgba(239,68,68,0.6)]", ring: "hover:ring-red-500/50", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Priority support"], highlight: true },
+      { amount: 1000, label: "Business", tagline: "Go big", badge: null, icon: Award, accent: "from-purple-500 to-fuchsia-500", glow: "shadow-[0_8px_24px_-8px_rgba(168,85,247,0.35)]", glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.5)]", ring: "hover:ring-purple-400/40", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Priority support"], highlight: false },
     ];
 
     const selectPlan = (plan: typeof plans[0]) => {
       setPaymentForm({
         ...paymentForm,
         amount: String(plan.amount),
-        monthlyRate: plan.monthlyRate,
-        maxMonths: plan.maxMonths,
+        monthlyRate: dynamicRate,   // still set internally, but never shown
+        maxMonths: dynamicMonths,
       });
       setShowAddPayment(true);
       setTimeout(() => {
@@ -1731,28 +1674,12 @@ export default function DashboardPage() {
       }, 50);
     };
 
-    let branchStats = { personal: 0, downline: 0, branch: 0 };
-    if (treeData && !treeLoading) {
-      const branch = computeBranchInvestment(treeData);
-      branchStats = {
-        personal: treeData.paymentSummary.totalInvested,
-        downline: branch - treeData.paymentSummary.totalInvested,
-        branch,
-      };
-    }
-
-    const dailyInterest = amountVal >= 50 && amountVal <= 5000 ? getDailyInterest(amountVal, dynamicRate) : 0;
-    const monthlyInterest = amountVal * dynamicRate;
-    const maxReturn = amountVal * dynamicRate * dynamicMonths;
-
     return (
       <div className="space-y-5 max-w-5xl mx-auto">
+        {/* Header – no rate display */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-lg md:text-2xl font-black">Investments</h1>
-            <p className={`flex items-center gap-1.5 text-xs md:text-sm font-bold mt-0.5 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>
-              <TrendingUp className="w-3.5 h-3.5" /> Your branch rate: {(dynamicRate * 100).toFixed(0)}% monthly
-            </p>
           </div>
           <button
             onClick={() => {
@@ -1765,34 +1692,7 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Branch Investment Stats */}
-        {treeData && !treeLoading && (
-          <div className={`${card} p-4`}>
-            <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
-              <Network className="w-4 h-4 text-red-400" />
-              Your Network Investment Weight
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center">
-                <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Personal</p>
-                <p className="font-bold text-base">{branchStats.personal} USDT</p>
-              </div>
-              <div className="text-center">
-                <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Downline</p>
-                <p className="font-bold text-base text-blue-400">{branchStats.downline} USDT</p>
-              </div>
-              <div className="text-center">
-                <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Branch (Total)</p>
-                <p className="font-bold text-base text-emerald-400">{branchStats.branch} USDT</p>
-              </div>
-            </div>
-            <p className={`text-xs mt-3 ${isDarkMode ? "text-gray-500" : "text-gray-400"} text-center`}>
-              Your monthly interest rate is based on your total branch investment.
-            </p>
-          </div>
-        )}
-
-        {/* Pricing Plan Cards */}
+        {/* Pricing Plan Cards – no monthly rate shown */}
         <div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
             {plans.map((plan) => {
@@ -1814,13 +1714,11 @@ export default function DashboardPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                   {plan.badge && (
-                    <span
-                      className={`absolute top-3 right-3 z-10 flex items-center gap-1 text-[9px] font-black px-2 py-[3px] rounded-full tracking-wide shadow-sm ${
-                        plan.badge === "OFFER"
-                          ? "bg-gradient-to-r from-amber-400 to-orange-400 text-black"
-                          : "bg-gradient-to-r from-red-500 to-orange-500 text-white"
-                      }`}
-                    >
+                    <span className={`absolute top-3 right-3 z-10 flex items-center gap-1 text-[9px] font-black px-2 py-[3px] rounded-full tracking-wide shadow-sm ${
+                      plan.badge === "OFFER"
+                        ? "bg-gradient-to-r from-amber-400 to-orange-400 text-black"
+                        : "bg-gradient-to-r from-red-500 to-orange-500 text-white"
+                    }`}>
                       {plan.badge === "POPULAR" && <Flame className="w-2.5 h-2.5" />}
                       {plan.badge}
                     </span>
@@ -1837,10 +1735,6 @@ export default function DashboardPage() {
                     <div className="flex items-baseline gap-1 mb-3">
                       <span className="text-2xl md:text-3xl font-black tracking-tight">{plan.amount}</span>
                       <span className={`text-xs font-bold ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>USDT</span>
-                    </div>
-
-                    <div className={`text-xs mb-3 font-semibold ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>
-                      {(plan.monthlyRate * 100).toFixed(0)}% monthly · {plan.maxMonths} months
                     </div>
 
                     <div className={`h-px w-full mb-3 ${isDarkMode ? "bg-white/10" : "bg-gray-100"}`} />
@@ -1907,19 +1801,9 @@ export default function DashboardPage() {
                     min="50"
                     max="5000"
                   />
-                  {amountVal >= 50 && amountVal <= 5000 && (
-                    <div className={`mt-2 p-3 rounded-lg ${isDarkMode ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"}`}>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div><p className="text-xs text-gray-500 mb-0.5">Daily</p><p className="font-bold text-emerald-400 text-xs md:text-sm">{dailyInterest.toFixed(4)} USDT</p></div>
-                        <div><p className="text-xs text-gray-500 mb-0.5">Monthly</p><p className="font-bold text-emerald-400 text-xs md:text-sm">{monthlyInterest.toFixed(2)} USDT</p></div>
-                        <div><p className="text-xs text-gray-500 mb-0.5">Max Return</p><p className="font-bold text-amber-400 text-xs md:text-sm">{maxReturn.toFixed(0)} USDT</p></div>
-                      </div>
-                      <div className="mt-2 text-center text-xs text-gray-500">
-                        Rate: {(dynamicRate * 100).toFixed(0)}% · {dynamicMonths} months
-                      </div>
-                    </div>
+                  {amountVal > 0 && (amountVal < 50 || amountVal > 5000) && (
+                    <p className="text-red-400 text-xs mt-1">Amount must be between 50 and 5,000 USDT</p>
                   )}
-                  {amountVal > 0 && (amountVal < 50 || amountVal > 5000) && <p className="text-red-400 text-xs mt-1">Amount must be between 50 and 5,000 USDT</p>}
                 </div>
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Note (Optional)</label>
@@ -2012,7 +1896,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Existing payments list */}
+        {/* Payments list – interest details removed from approved payments */}
         {paymentsLoading ? (
           <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-t-transparent border-red-500 rounded-full animate-spin" /></div>
         ) : payments.length === 0 ? (
@@ -2025,9 +1909,6 @@ export default function DashboardPage() {
             {payments.map(payment => {
               const statusCfg  = getStatusConfig(payment.status);
               const StatusIcon = statusCfg.icon;
-              const calc       = payment.investmentCalc;
-              const maxMo      = payment.maxMonths ?? 25;
-              const rate       = payment.monthlyRate ?? 0.08;
               return (
                 <div key={payment._id} className={`${card} !rounded-xl transition-all duration-300 hover:-translate-y-0.5 ${isDarkMode ? "hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] hover:border-white/10" : "hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]"}`}>
                   <div className="p-3 md:p-4">
@@ -2041,9 +1922,6 @@ export default function DashboardPage() {
                           <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
                             {new Date(payment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
-                          <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                            {(rate * 100).toFixed(1)}% · {maxMo}mo
-                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -2055,34 +1933,11 @@ export default function DashboardPage() {
                         <button onClick={() => handleDeletePayment(payment._id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
-                    {payment.status === "approved" && calc && (
-                      <div className={`rounded-lg p-2.5 ${isDarkMode ? "bg-white/3" : "bg-gray-50"}`}>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2.5">
-                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Days Active</p><p className="font-bold text-xs md:text-sm">{calc.daysElapsed} days</p></div>
-                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Daily</p><p className="font-bold text-xs md:text-sm text-emerald-400">{calc.dailyInterest} USDT</p></div>
-                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Earned</p><p className="font-bold text-xs md:text-sm text-emerald-400">{calc.totalInterest.toFixed(4)} USDT</p></div>
-                          <div><p className={`text-xs mb-0.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Max Return</p><p className="font-bold text-xs md:text-sm text-amber-400">{calc.maxInterest.toFixed(2)} USDT</p></div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>{calc.daysElapsed}/{maxMo * 30}d</span>
-                            <span>{((calc.daysElapsed / (maxMo * 30)) * 100).toFixed(1)}%</span>
-                          </div>
-                          <div className={`h-1.5 rounded-full ${isDarkMode ? "bg-white/10" : "bg-gray-200"}`}>
-                            <div className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600" style={{ width: `${Math.min((calc.daysElapsed / (maxMo * 30)) * 100, 100)}%` }} />
-                          </div>
-                          <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                            Matures: {new Date(calc.maturityDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                            {calc.isMatured && <span className="text-red-400 ml-2 font-semibold">Matured</span>}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                     {payment.status === "pending" && (
                       <div className={`rounded-lg p-2.5 flex items-center gap-2 ${isDarkMode ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
                         <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                         <p className="text-xs text-amber-300">
-                          Awaiting approval. Daily interest of <strong>{getDailyInterest(payment.amount, rate).toFixed(4)} USDT</strong> starts once approved.
+                          Awaiting approval.
                         </p>
                       </div>
                     )}
@@ -2097,7 +1952,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Profile Render (unchanged) ──────────────────────────────────────────
+  // ─── Profile Render ──────────────────────────────────────────
 
   function renderProfile() {
     const wasEmailRegistered = !!user!.email;
@@ -2210,7 +2065,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Finance Render (unchanged) ──────────────────────────────────────────
+  // ─── Finance Render ──────────────────────────────────────────
 
   function renderFinance() {
     const walletNetworks = [
@@ -2335,7 +2190,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Share Render (unchanged) ────────────────────────────────────────────
+  // ─── Share Render ────────────────────────────────────────────
 
   function renderShare() {
     const shareLink = user!.userCode ? `${window.location.origin}/join/${user!.userCode}` : "";
@@ -2405,7 +2260,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Settings Render (unchanged) ─────────────────────────────────────────
+  // ─── Settings Render ─────────────────────────────────────────
 
   function renderSettings() {
     return (

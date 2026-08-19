@@ -15,30 +15,24 @@ async function verifyToken(token: string): Promise<any> {
   }
 }
 
-// ⭐ No hardcoded rates – per-payment values used
-
-function calculateInterestEarned(
-  amount: number,
-  investmentDate: Date,
-  monthlyRate: number,
-  maxMonths: number
-) {
+/**
+ * ⭐ This function ONLY computes time-based progress info
+ * (days elapsed, maturity date, matured flag). It does NOT
+ * calculate or fabricate any dollar interest amount anymore.
+ * Real earnings come exclusively from the Distribution collection
+ * via user.walletBalance, credited by /api/admin/distribute-profit.
+ */
+function calculateProgress(investmentDate: Date, maxMonths: number) {
   const now = new Date();
   const maxDays = maxMonths * 30;
   const msElapsed = now.getTime() - investmentDate.getTime();
-  const daysElapsed = Math.floor(msElapsed / (1000 * 60 * 60 * 24));
+  const daysElapsed = Math.max(0, Math.floor(msElapsed / (1000 * 60 * 60 * 24)));
   const cappedDays = Math.min(daysElapsed, maxDays);
-  const dailyInterest = (amount * monthlyRate) / 30;
-  const totalInterest = dailyInterest * cappedDays;
-  const maxInterest = amount * monthlyRate * maxMonths;
   const maturityDate = new Date(investmentDate);
   maturityDate.setDate(maturityDate.getDate() + maxDays);
 
   return {
     daysElapsed: cappedDays,
-    dailyInterest: parseFloat(dailyInterest.toFixed(4)),
-    totalInterest: parseFloat(totalInterest.toFixed(4)),
-    maxInterest: parseFloat(maxInterest.toFixed(4)),
     isMatured: daysElapsed >= maxDays,
     maturityDate,
   };
@@ -58,39 +52,34 @@ export async function GET(
     const decoded = await verifyToken(token);
     if (!decoded) return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
 
-    const user = await User.findById(id).select("payments");
+    // ⭐ walletBalance fetched — this IS the real earned amount
+    const user = await User.findById(id).select("payments walletBalance");
     if (!user) return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
 
     const sortedPayments = [...user.payments]
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .map((payment: any) => {
         if (payment.status === "approved") {
-          const rate = payment.monthlyRate ?? 0.08;
           const maxMonths = payment.maxMonths ?? 25;
-          const calc = calculateInterestEarned(
-            payment.amount,
-            new Date(payment.createdAt),
-            rate,
-            maxMonths
-          );
-          return { ...payment.toObject(), investmentCalc: calc };
+          // ⭐ Only progress/timeline data — no dollar amounts
+          const progress = calculateProgress(new Date(payment.createdAt), maxMonths);
+          return { ...payment.toObject(), investmentCalc: progress };
         }
         return { ...payment.toObject(), investmentCalc: null };
       });
 
     const approvedPayments = sortedPayments.filter((p: any) => p.status === "approved");
     const totalInvested = approvedPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
-    const totalInterestEarned = approvedPayments.reduce(
-      (sum: number, p: any) => sum + (p.investmentCalc?.totalInterest || 0),
-      0
-    );
+
+    // ⭐ REAL interest earned = walletBalance credited by admin distributions
+    const totalInterestEarned = parseFloat((user.walletBalance || 0).toFixed(4));
 
     return NextResponse.json({
       success: true,
       data: sortedPayments,
       portfolio: {
         totalInvested: parseFloat(totalInvested.toFixed(4)),
-        totalInterestEarned: parseFloat(totalInterestEarned.toFixed(4)),
+        totalInterestEarned,
         totalValue: parseFloat((totalInvested + totalInterestEarned).toFixed(4)),
         maxMonths: 25,
       },
@@ -145,8 +134,6 @@ export async function POST(
     });
 
     const screenshotUrl = blob.url;
-    const dailyInterest = (amount * monthlyRate) / 30;
-    const maxInterest = amount * monthlyRate * maxMonths;
 
     const newPayment = {
       amount,
@@ -164,12 +151,14 @@ export async function POST(
     user.payments.push(newPayment as any);
     await user.save();
 
+    // ⭐ Removed misleading "Daily interest will be X USDT" projection.
+    // Real income only appears after an admin profit distribution.
     return NextResponse.json({
       success: true,
       message: "Investment submitted! Pending approval from admin.",
       data: {
         ...newPayment,
-        note: `Daily interest will be ${dailyInterest.toFixed(4)} USDT once approved. Max return: ${maxInterest.toFixed(2)} USDT in ${maxMonths} months.`,
+        note: "Your investment is now pending approval. Once approved, it will be included in future profit distributions.",
       },
     });
   } catch (error) {
