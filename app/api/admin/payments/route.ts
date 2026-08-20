@@ -1,3 +1,4 @@
+//api/admin/payments/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/config/db";
 import User from "@/lib/models/User";
@@ -34,7 +35,6 @@ export async function GET(req: NextRequest) {
       }));
     });
 
-    // Sort by newest first
     allPayments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return NextResponse.json({ success: true, data: allPayments });

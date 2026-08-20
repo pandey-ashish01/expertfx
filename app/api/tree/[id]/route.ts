@@ -138,7 +138,11 @@ export async function GET(
       );
     }
 
-    const SUPER_ADMIN_CODE = "ZENO000";
+    // ⭐ FIXED: was "ZENO000" — did not match EFX0000 used everywhere else
+    // (verifyAdmin.ts, AdminPage, dashboard). That mismatch meant isAdmin
+    // was always false here, so the real admin could never view anyone
+    // else's network tree through this route.
+    const SUPER_ADMIN_CODE = "EFX0000";
 
     const requestingUser = await User.findById(decoded.userId)
       .select("userCode")

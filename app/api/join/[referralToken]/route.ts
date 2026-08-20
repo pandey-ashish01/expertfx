@@ -3,8 +3,6 @@ import { connectDB } from "@/lib/config/db";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 
-const DEFAULT_MAX_MONTHS = 24;
-
 // ─── यहाँ प्रीफिक्स EFX है ──────────────────────────────────────────────
 async function generateUserCode(): Promise<string> {
   const PREFIX = "EFX";
@@ -149,6 +147,11 @@ export async function POST(
 
     const userCode = await generateUserCode();
 
+    // ⭐ FIXED: removed `maxInvestmentMonths` — it is not a field in the
+    // User schema (only per-payment `maxMonths` exists inside payments[]).
+    // It was silently dropped/unused everywhere else in the codebase, so
+    // it was dead weight that could confuse future readers into thinking
+    // there's a per-user investment duration when there isn't.
     const newUser = await User.create({
       name: name.trim(),
       mobile: cleanMobile || "",
@@ -158,7 +161,6 @@ export async function POST(
       userCode,
       referralToken: userCode,
       parentId: parentUser._id,
-      maxInvestmentMonths: DEFAULT_MAX_MONTHS,
       payments: [],
       children: [],
       createdAt: new Date(),

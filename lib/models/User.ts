@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-// ⭐ DYNAMIC: Payment schema now includes monthlyRate and maxMonths
 const PaymentSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   screenshot: { type: String, required: true },
@@ -52,7 +51,7 @@ const UserSchema = new mongoose.Schema(
     mt5Email: { type: String, default: "", trim: true, lowercase: true },
     mt5Account: { type: String, default: "" },
 
-    walletBalance: { type: Number, default: 0 },
+    walletBalance: { type: Number, default: 0, min: 0 },
     pan: { type: String, default: "" },
 
     parentId: {
@@ -62,7 +61,10 @@ const UserSchema = new mongoose.Schema(
     },
     children: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     payments: [PaymentSchema],
-    maxInvestmentMonths: { type: Number, default: 25 },
+
+    isSalaryEligible: { type: Boolean, default: false },
+    isLeadershipEligible: { type: Boolean, default: false },
+    leadershipRank: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );

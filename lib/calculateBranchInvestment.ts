@@ -62,7 +62,10 @@ export function computeBranchInvestment(node: TreeNode): number {
   return node.branchInvestment;
 }
 
-export function groupByLevel(roots: TreeNode[]): Record<number, TreeNode[]> {
+// Per-root level grouping — har root ka apna independent subtree.
+// Ek user ka level-ratio kabhi doosre unrelated root ke totals se
+// contaminate nahi hoga.
+export function groupByLevelForRoot(root: TreeNode): Record<number, TreeNode[]> {
   const levels: Record<number, TreeNode[]> = {};
 
   function traverse(node: TreeNode, level: number) {
@@ -73,6 +76,21 @@ export function groupByLevel(roots: TreeNode[]): Record<number, TreeNode[]> {
     node.children.forEach((child) => traverse(child, level + 1));
   }
 
+  traverse(root, 0);
+  return levels;
+}
+
+// Deprecated — global mixing wala purana behavior. Naye code me
+// isko distribution ke liye use mat karo, sirf backward-compat ke liye rakha hai.
+export function groupByLevel(roots: TreeNode[]): Record<number, TreeNode[]> {
+  const levels: Record<number, TreeNode[]> = {};
+  function traverse(node: TreeNode, level: number) {
+    if (level > 0) {
+      if (!levels[level]) levels[level] = [];
+      levels[level].push(node);
+    }
+    node.children.forEach((child) => traverse(child, level + 1));
+  }
   roots.forEach((root) => traverse(root, 0));
   return levels;
 }

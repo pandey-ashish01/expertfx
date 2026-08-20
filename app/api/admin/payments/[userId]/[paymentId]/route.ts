@@ -1,20 +1,8 @@
+//api/admin/payments/[userid]/[paymentid]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/config/db";
 import User from "@/lib/models/User";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
-
-const DEFAULT_MAX_MONTHS  = 24;
-const REFERRAL_MAX_MONTHS = 30;
-
-async function verifyToken(token: string): Promise<any> {
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch {
-    return null;
-  }
-}
+import { verifyAdmin } from "@/lib/verifyAdmin";
 
 export async function PUT(
   req: NextRequest,
@@ -24,16 +12,10 @@ export async function PUT(
     await connectDB();
     const { userId, paymentId } = await context.params;
 
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token)
-      return NextResponse.json({ success: false, message: "No token provided" }, { status: 401 });
-
-    const decoded = await verifyToken(token);
-    if (!decoded)
-      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
-
-    if (decoded.userCode !== "EFX0000")
-      return NextResponse.json({ success: false, message: "Access denied. Admins only." }, { status: 403 });
+    const admin = await verifyAdmin(req);
+    if (!admin) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
 
     const { status } = await req.json();
 
@@ -53,14 +35,6 @@ export async function PUT(
 
     payment.status = status;
     payment.updatedAt = new Date();
-
-    if (status === "approved") {
-      if (user.children && user.children.length > 0) {
-        user.maxInvestmentMonths = REFERRAL_MAX_MONTHS;
-      } else if (!user.maxInvestmentMonths) {
-        user.maxInvestmentMonths = DEFAULT_MAX_MONTHS;
-      }
-    }
 
     await user.save();
 

@@ -1,3 +1,4 @@
+///api/users/[id]/payments/[paymentid]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/config/db";
 import User from "@/lib/models/User";

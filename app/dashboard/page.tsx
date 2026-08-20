@@ -2711,7 +2711,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-lg md:text-2xl font-black">Share & Earn</h1>
           <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-            Invite friends to extend your investment duration
+            Invite friends to grow your network
           </p>
         </div>
         <div className={`${card} p-3 md:p-4`}>
@@ -2720,9 +2720,9 @@ export default function DashboardPage() {
               <Star className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm">Referral Bonus</p>
+              <p className="font-bold text-sm">Referral Network</p>
               <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                Invite friends – your plan extends up to 35 months
+                Invite friends to build your downline
               </p>
             </div>
           </div>
@@ -2738,7 +2738,7 @@ export default function DashboardPage() {
               <div className={`p-3 rounded-xl ${isDarkMode ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"}`}>
                 <p className={`text-xs font-bold mb-0.5 ${isDarkMode ? "text-red-300" : "text-red-700"}`}>Code: {user!.userCode}</p>
                 <p className={`text-xs ${isDarkMode ? "text-red-400/70" : "text-red-600"}`}>
-                  Share this code to extend your plan duration.
+                  Share this code to grow your network.
                 </p>
               </div>
             </>
