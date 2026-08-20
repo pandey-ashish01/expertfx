@@ -26,9 +26,6 @@ interface Payment {
   monthlyRate?: number;
   maxMonths?: number;
   createdAt: string;
-  // ⭐ investmentCalc is now PURELY time/progress info.
-  // No dollar amounts are computed by formula anymore —
-  // real earnings live in portfolio.totalInterestEarned (wallet-based).
   investmentCalc?: {
     daysElapsed: number;
     isMatured: boolean;
@@ -112,7 +109,6 @@ const SUPER_ADMIN_CODE = "EFX0000";
 
 // ─── Global Helpers ──────────────────────────────────────────────────────────
 
-/** Recursively compute branch investment = personal + all downline */
 function computeBranchInvestment(node: UserNode): number {
   let sum = node.paymentSummary.totalInvested;
   for (const child of node.children) {
@@ -121,14 +117,11 @@ function computeBranchInvestment(node: UserNode): number {
   return sum;
 }
 
-/** Determine monthly rate and max months based on branch investment */
 function getRateAndMonths(branch: number): { rate: number; months: number } {
   if (branch >= 2000) return { rate: 0.12, months: 36 };
   if (branch >= 500)  return { rate: 0.10, months: 30 };
   return { rate: 0.08, months: 24 };
 }
-
-
 
 function getStatusConfig(status: string) {
   switch (status) {
@@ -187,19 +180,43 @@ interface ConfirmState {
   amount: number;
 }
 
-function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string }) {
+function AdminPanel({
+  isDarkMode,
+  card,
+  focusPaymentId,
+}: {
+  isDarkMode: boolean;
+  card: string;
+  focusPaymentId?: string | null;
+}) {
   const [payments, setPayments] = useState<AdminPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  // Confirmation modal (approve/reject)
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
-  // Full-detail view modal (screenshot, date/time, everything)
   const [viewPayment, setViewPayment] = useState<AdminPayment | null>(null);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
 
   useEffect(() => { fetchPayments(); }, []);
+
+  // When focusPaymentId is set, scroll to that payment and highlight it
+  useEffect(() => {
+    if (focusPaymentId && payments.length > 0) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`payment-${focusPaymentId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-red-500/60", "transition-all");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-red-500/60");
+          }, 2000);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [focusPaymentId, payments]);
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -219,7 +236,6 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
     }
   };
 
-  // Opens confirmation modal instead of acting immediately
   const requestAction = (payment: AdminPayment, status: "approved" | "rejected") => {
     setConfirmState({
       userId: payment.userId,
@@ -230,7 +246,6 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
     });
   };
 
-  // Actually performs the API call — only after modal confirm
   const confirmAction = async () => {
     if (!confirmState) return;
     const { userId, paymentId, status } = confirmState;
@@ -245,7 +260,6 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
       const data = await res.json();
       if (data.success) {
         setPayments((prev) => prev.map((p) => p._id === paymentId ? { ...p, status } : p));
-        // Keep the detail modal's data in sync if it's open on the same payment
         setViewPayment((prev) => (prev && prev._id === paymentId ? { ...prev, status } : prev));
         toast.success(`Payment ${status}`);
       } else {
@@ -270,39 +284,39 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-red-500" /> Admin Panel
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-lg xs:text-xl md:text-2xl font-black flex items-center gap-2 truncate">
+            <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-red-500 flex-shrink-0" /> Admin Panel
           </h1>
           <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
             Approve or reject user investments
           </p>
         </div>
-        <button onClick={fetchPayments} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
+        <button onClick={fetchPayments} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex-shrink-0 active:scale-95 transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
           Refresh
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+      <div className="grid grid-cols-3 gap-2 md:gap-3">
         {[
           { label: "Total",    value: payments.length,                                      color: "from-red-500 to-red-600"       },
           { label: "Pending",  value: pendingCount,                                         color: "from-amber-500 to-orange-500"    },
           { label: "Approved", value: payments.filter(p => p.status === "approved").length, color: "from-emerald-500 to-emerald-600" },
         ].map((s) => (
-          <div key={s.label} className={`${card} p-3 md:p-4`}>
-            <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{s.label}</p>
-            <p className={`text-lg md:text-2xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value}</p>
+          <div key={s.label} className={`${card} p-2.5 md:p-4`}>
+            <p className={`text-[10px] md:text-xs mb-1 truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{s.label}</p>
+            <p className={`text-base md:text-2xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1.5 xs:gap-2 flex-wrap">
         {(["pending", "approved", "rejected", "all"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold capitalize transition-all ${
+            className={`px-2.5 xs:px-3 py-2 rounded-xl text-xs md:text-sm font-semibold capitalize transition-all active:scale-95 ${
               filter === f ? "bg-red-500 text-white" : isDarkMode ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -325,32 +339,39 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
           <div className="w-10 h-10 border-4 border-t-transparent border-red-500 rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className={`${card} p-12 text-center`}>
-          <Clock className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+        <div className={`${card} p-10 md:p-12 text-center`}>
+          <Clock className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-3 text-gray-600" />
           <p className={isDarkMode ? "text-gray-400" : "text-gray-500"}>No {filter} payments</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((payment) => (
-            <div key={payment._id} className={`${card} p-4 md:p-5`}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
+            <div
+              key={payment._id}
+              id={`payment-${payment._id}`}
+              className={`${card} p-3 xs:p-4 md:p-5 transition-all ${
+                focusPaymentId === payment._id ? "ring-2 ring-red-500/60" : ""
+              }`}
+            >
+              <div className="flex items-start justify-between mb-3 gap-2">
+                <div className="flex items-center gap-2.5 xs:gap-3 min-w-0">
                   <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0">
                     {payment.userName.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <p className="font-bold text-sm">{payment.userName}</p>
-                    <p className="text-xs text-red-400 font-mono">{payment.userCode}</p>
-                    <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{payment.userMobile}</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm truncate">{payment.userName}</p>
+                    <p className="text-xs text-red-400 font-mono truncate">{payment.userCode}</p>
+                    <p className={`text-xs truncate ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{payment.userMobile}</p>
                   </div>
                 </div>
-                <div className={`px-2 py-1 rounded-full border text-xs font-semibold ${statusStyle[payment.status]}`}>
+                <div className={`px-2 py-1 rounded-full border text-xs font-semibold flex-shrink-0 ${statusStyle[payment.status]}`}>
                   {payment.status}
                 </div>
               </div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-xl md:text-2xl font-black">
+
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <p className="text-lg xs:text-xl md:text-2xl font-black">
                     {payment.amount} <span className="text-xs md:text-sm font-normal text-gray-400">USDT</span>
                   </p>
                   <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
@@ -362,17 +383,33 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                     </p>
                   )}
                 </div>
-                {/* View now opens the full-detail modal instead of a raw new tab */}
-                <button onClick={() => setViewPayment(payment)} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs md:text-sm transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
-                  <Eye className="w-3.5 h-3.5" /> View
-                </button>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setZoomImage(payment.screenshot)}
+                    className={`relative w-12 h-12 xs:w-14 xs:h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border flex-shrink-0 active:scale-95 transition-all ${isDarkMode ? "border-white/10 bg-black/30" : "border-gray-200 bg-gray-100"}`}
+                    aria-label="Zoom screenshot"
+                  >
+                    <img
+                      src={payment.screenshot}
+                      alt="Payment screenshot"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors" />
+                  </button>
+                  <button onClick={() => setViewPayment(payment)} className={`flex items-center gap-1.5 px-2.5 xs:px-3 py-2.5 rounded-xl text-xs md:text-sm transition-all active:scale-95 ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
+                    <Eye className="w-3.5 h-3.5" /> <span className="hidden xs:inline">View</span>
+                  </button>
+                </div>
               </div>
+
               {payment.status === "pending" && (
                 <div className="flex gap-2">
                   <button
                     onClick={() => requestAction(payment, "approved")}
                     disabled={actionLoading === payment._id}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm active:scale-[0.98]"
                   >
                     {actionLoading === payment._id ? <div className="w-4 h-4 border-2 border-t-transparent border-emerald-400 rounded-full animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                     Approve
@@ -380,7 +417,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                   <button
                     onClick={() => requestAction(payment, "rejected")}
                     disabled={actionLoading === payment._id}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm active:scale-[0.98]"
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>
@@ -391,23 +428,45 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
         </div>
       )}
 
+      {/* ─── Quick Zoom Overlay for Thumbnail ─────────────────────────────── */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
+          onClick={() => setZoomImage(null)}
+        >
+          <button
+            onClick={() => setZoomImage(null)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={zoomImage}
+            alt="Payment screenshot full view"
+            className="max-w-full max-h-full object-contain rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* ─── Full Detail View Modal ─────────────────────────────── */}
       {viewPayment && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 xs:p-4">
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setViewPayment(null)}
           />
           <div className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDarkMode ? "bg-[#111827] border border-white/10" : "bg-white border border-gray-200"}`}>
             {/* Header */}
-            <div className={`sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl ${isDarkMode ? "border-white/10 bg-[#111827]/95" : "border-gray-100 bg-white/95"}`}>
+            <div className={`sticky top-0 z-10 flex items-center justify-between px-4 xs:px-5 py-4 border-b backdrop-blur-xl ${isDarkMode ? "border-white/10 bg-[#111827]/95" : "border-gray-100 bg-white/95"}`}>
               <h2 className="font-black text-base">Payment Details</h2>
               <button onClick={() => setViewPayment(null)} className={`p-1.5 rounded-lg ${isDarkMode ? "hover:bg-white/10" : "hover:bg-gray-100"}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-4 xs:p-5 space-y-4">
               {/* User */}
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0">
@@ -489,14 +548,14 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                   <button
                     onClick={() => requestAction(viewPayment, "approved")}
                     disabled={actionLoading === viewPayment._id}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm active:scale-[0.98]"
                   >
                     <CheckCircle className="w-4 h-4" /> Approve
                   </button>
                   <button
                     onClick={() => requestAction(viewPayment, "rejected")}
                     disabled={actionLoading === viewPayment._id}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm active:scale-[0.98]"
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>
@@ -509,12 +568,12 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
 
       {/* ─── Confirmation Modal (Approve / Reject) ─────────────────────────────── */}
       {confirmState && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 xs:p-4">
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => (actionLoading ? null : setConfirmState(null))}
           />
-          <div className={`relative w-full max-w-sm rounded-2xl p-6 shadow-2xl ${isDarkMode ? "bg-[#111827] border border-white/10" : "bg-white border border-gray-200"}`}>
+          <div className={`relative w-full max-w-sm rounded-2xl p-5 xs:p-6 shadow-2xl ${isDarkMode ? "bg-[#111827] border border-white/10" : "bg-white border border-gray-200"}`}>
             <button
               onClick={() => setConfirmState(null)}
               disabled={!!actionLoading}
@@ -542,12 +601,12 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                 : "Are you sure you want to reject this investment? This action cannot be undone."}
             </p>
 
-            <div className={`rounded-xl p-3 mb-5 flex items-center justify-between ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
-              <div>
-                <p className="text-sm font-bold">{confirmState.userName}</p>
+            <div className={`rounded-xl p-3 mb-5 flex items-center justify-between gap-2 ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate">{confirmState.userName}</p>
                 <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Payment ID: {confirmState.paymentId.slice(-8)}</p>
               </div>
-              <p className="text-lg font-black">{confirmState.amount} <span className="text-xs font-normal text-gray-400">USDT</span></p>
+              <p className="text-lg font-black flex-shrink-0">{confirmState.amount} <span className="text-xs font-normal text-gray-400">USDT</span></p>
             </div>
 
             <div className="flex gap-2">
@@ -577,6 +636,124 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Admin Dashboard Panel (compact) ──────────────────────────────────────
+
+function AdminDashboardPanel({
+  isDarkMode,
+  card,
+  onSelectPayment,
+}: {
+  isDarkMode: boolean;
+  card: string;
+  onSelectPayment: (paymentId: string) => void;
+}) {
+  const [adminData, setAdminData] = useState<AdminPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetchAdminPayments();
+  }, []);
+
+  const fetchAdminPayments = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/admin/payments", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setAdminData(data.data);
+      else setError(data.message);
+    } catch {
+      setError("Failed to fetch admin data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pendingPayments = adminData.filter(p => p.status === "pending");
+  const approvedCount = adminData.filter(p => p.status === "approved").length;
+
+  if (loading) {
+    return (
+      <div className={`${card} p-4 flex justify-center`}>
+        <div className="w-6 h-6 border-2 border-t-transparent border-red-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`${card} p-4 text-red-400 text-sm flex items-center gap-2`}>
+        <AlertCircle className="w-4 h-4" /> {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${card} overflow-hidden`}>
+      <div className="p-3 md:p-4 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-red-500" />
+          <h2 className="font-bold text-sm md:text-base">Admin Quick View</h2>
+        </div>
+        <span className="text-xs text-gray-500">Tap a payment to approve</span>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-2 p-3 md:p-4">
+        <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <p className="text-xs text-amber-400 font-semibold mb-0.5">Pending</p>
+          <p className="text-xl md:text-2xl font-black text-amber-400">{pendingPayments.length}</p>
+        </div>
+        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+          <p className="text-xs text-emerald-400 font-semibold mb-0.5">Approved</p>
+          <p className="text-xl md:text-2xl font-black text-emerald-400">{approvedCount}</p>
+        </div>
+      </div>
+
+      {/* Pending list (max 3) */}
+      {pendingPayments.length > 0 && (
+        <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">
+            Latest pending
+          </p>
+          {pendingPayments.slice(0, 3).map(payment => (
+            <button
+              key={payment._id}
+              onClick={() => onSelectPayment(payment._id)}
+              className={`w-full flex items-center gap-2 p-2.5 rounded-xl transition-all active:scale-[0.98] ${
+                isDarkMode
+                  ? "bg-white/5 hover:bg-white/10 border border-white/5"
+                  : "bg-gray-50 hover:bg-gray-100 border border-gray-100"
+              }`}
+            >
+              <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-bold truncate">
+                  {payment.amount} USDT
+                  <span className="ml-1 text-xs font-normal text-gray-400">
+                    · {payment.userName}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {new Date(payment.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -620,8 +797,6 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
         const normalized = normalizeTreeNode(data.data);
         setHierarchyData(normalized);
         setExpandedNodes(new Set([normalized._id]));
-        // Optional debug:
-        // debugTree(normalized);
       } else {
         setError(data.message || "Failed to load network");
       }
@@ -685,7 +860,6 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
                 <p className="font-bold text-sm md:text-base truncate">{node.name}</p>
                 {isRoot && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">YOU</span>}
                 {node.userCode && <span className="font-mono text-xs text-red-400 flex-shrink-0">{node.userCode}</span>}
-                {/* Dynamic rate badge */}
                 <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                   rate === 0.12 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
                   rate === 0.10 ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
@@ -738,41 +912,40 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2">
-            <Network className="w-5 h-5 md:w-6 md:h-6 text-red-500" /> My Network
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-lg xs:text-xl md:text-2xl font-black flex items-center gap-2 truncate">
+            <Network className="w-5 h-5 md:w-6 md:h-6 text-red-500 flex-shrink-0" /> My Network
           </h1>
           <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
             {totalMembers} member{totalMembers !== 1 ? "s" : ""} in your network
           </p>
         </div>
-        <button onClick={fetchNetwork} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
+        <button onClick={fetchNetwork} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex-shrink-0 active:scale-95 transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}>
           Refresh
         </button>
       </div>
 
-      {/* Top stats: Personal, Downline, Branch, Your Rate */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         <div className={`${card} p-3 md:p-4`}>
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Personal</p>
-          <p className="text-lg md:text-xl font-black text-blue-400">{hierarchyData.paymentSummary.totalInvested} USDT</p>
+          <p className="text-base xs:text-lg md:text-xl font-black text-blue-400">{hierarchyData.paymentSummary.totalInvested} USDT</p>
         </div>
         <div className={`${card} p-3 md:p-4`}>
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Downline</p>
-          <p className="text-lg md:text-xl font-black text-emerald-400">{(rootBranch - hierarchyData.paymentSummary.totalInvested)} USDT</p>
+          <p className="text-base xs:text-lg md:text-xl font-black text-emerald-400">{(rootBranch - hierarchyData.paymentSummary.totalInvested)} USDT</p>
         </div>
         <div className={`${card} p-3 md:p-4`}>
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Branch (Total)</p>
-          <p className="text-lg md:text-xl font-black text-purple-400">{rootBranch} USDT</p>
+          <p className="text-base xs:text-lg md:text-xl font-black text-purple-400">{rootBranch} USDT</p>
         </div>
         <div className={`${card} p-3 md:p-4`}>
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Your Rate</p>
-          <p className="text-lg md:text-xl font-black text-amber-400">{(rootRate * 100).toFixed(0)}%</p>
+          <p className="text-base xs:text-lg md:text-xl font-black text-amber-400">{(rootRate * 100).toFixed(0)}%</p>
         </div>
       </div>
 
-      <div className={`${card} p-3 md:p-5`}>{renderNode(hierarchyData)}</div>
+      <div className={`${card} p-2.5 xs:p-3 md:p-5`}>{renderNode(hierarchyData)}</div>
     </div>
   );
 }
@@ -909,7 +1082,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSelectedLevel(null)}
-            className={`p-2.5 rounded-xl flex-shrink-0 ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}
+            className={`p-2.5 rounded-xl flex-shrink-0 active:scale-95 transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -937,7 +1110,54 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
           </div>
         </div>
 
-        <div className={`${card} overflow-hidden`}>
+        {/* ── Mobile: card list instead of forced-scroll table ── */}
+        <div className={`${card} overflow-hidden md:hidden`}>
+          <div className={`px-4 py-3 border-b ${isDarkMode ? "border-white/5" : "border-gray-100"}`}>
+            <p className="font-bold text-sm">All Members — Level {selectedLevel.level}</p>
+          </div>
+          <div className={`divide-y ${isDarkMode ? "divide-white/5" : "divide-gray-100"}`}>
+            {selectedLevel.members.map((member, idx) => {
+              const isActive = member.paymentSummary.approvedCount > 0;
+              return (
+                <div key={member._id} className="p-3.5 flex items-center gap-3">
+                  <span className={`text-xs font-bold w-4 flex-shrink-0 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{idx + 1}</span>
+                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${getGrad(member.name)} flex items-center justify-center text-white font-black text-xs flex-shrink-0`}>
+                    {getInitials(member.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-sm truncate">{member.name}</p>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${
+                        isActive
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : isDarkMode ? "bg-white/5 text-gray-500 border border-white/10" : "bg-gray-100 text-gray-400 border border-gray-200"
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-400" : isDarkMode ? "bg-gray-600" : "bg-gray-300"}`} />
+                        {isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <p className={`text-xs truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{member.mobile}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-bold text-xs ${member.paymentSummary.totalInvested > 0 ? "text-blue-400" : isDarkMode ? "text-gray-600" : "text-gray-300"}`}>
+                      {member.paymentSummary.totalInvested > 0 ? `${member.paymentSummary.totalInvested} USDT` : "—"}
+                    </p>
+                    <p className={`text-[10px] ${member.paymentSummary.totalInterestEarned > 0 ? "text-emerald-400" : isDarkMode ? "text-gray-600" : "text-gray-300"}`}>
+                      {member.paymentSummary.totalInterestEarned > 0 ? `+${member.paymentSummary.totalInterestEarned.toFixed(2)}` : "—"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className={`px-4 py-3 flex items-center justify-between text-xs font-bold border-t-2 ${isDarkMode ? "border-white/10 bg-white/3 text-gray-300" : "border-gray-200 bg-gray-50 text-gray-700"}`}>
+            <span>Total</span>
+            <span className="text-blue-400">{selectedLevel.totalBusiness.toFixed(0)} USDT</span>
+          </div>
+        </div>
+
+        {/* ── Desktop / tablet: full table ── */}
+        <div className={`${card} overflow-hidden hidden md:block`}>
           <div className={`px-4 py-3 border-b ${isDarkMode ? "border-white/5" : "border-gray-100"}`}>
             <p className="font-bold text-sm">All Members — Level {selectedLevel.level}</p>
           </div>
@@ -1038,10 +1258,10 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2">
-            <Users className="w-5 h-5 md:w-6 md:h-6 text-red-500" /> Membership
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-lg xs:text-xl md:text-2xl font-black flex items-center gap-2 truncate">
+            <Users className="w-5 h-5 md:w-6 md:h-6 text-red-500 flex-shrink-0" /> Membership
           </h1>
           <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
             Network breakdown by level
@@ -1049,7 +1269,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
         </div>
         <button
           onClick={fetchStats}
-          className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+          className={`px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex-shrink-0 active:scale-95 transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
         >
           Refresh
         </button>
@@ -1098,96 +1318,141 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
           </p>
         </div>
       ) : (
-        <div className={`${card} overflow-hidden`}>
-          <div className={`px-4 py-3 border-b ${isDarkMode ? "border-white/5" : "border-gray-100"} flex items-center justify-between`}>
-            <p className="font-bold text-sm">Membership Breakdown by Level</p>
-            <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{levelStats.length} levels</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className={`text-xs uppercase tracking-wider ${isDarkMode ? "bg-white/3 text-gray-400" : "bg-gray-50 text-gray-500"}`}>
-                  <th className="px-4 py-3 text-left">Level No.</th>
-                  <th className="px-4 py-3 text-right">Member Count</th>
-                  <th className="px-4 py-3 text-right">Active Member</th>
-                  <th className="px-4 py-3 text-right hidden sm:table-cell">Inactive Member</th>
-                  <th className="px-4 py-3 text-right">Total Business (USDT)</th>
-                  <th className="px-4 py-3 text-center hidden sm:table-cell">Active %</th>
-                  <th className="px-4 py-3 text-center">Details</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDarkMode ? "divide-white/5" : "divide-gray-100"}`}>
-                {levelStats.map(ls => {
-                  const color = getColor(ls.level);
-                  const activePercent = ls.totalMembers > 0 ? Math.round((ls.activeMembers / ls.totalMembers) * 100) : 0;
-                  return (
-                    <tr key={ls.level} className={`transition-colors ${isDarkMode ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${color.dot}`} />
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${color.badge}`}>
-                            Level {ls.level}
-                          </span>
+        <>
+          {/* ── Mobile: card list ── */}
+          <div className={`${card} overflow-hidden md:hidden`}>
+            <div className={`px-4 py-3 border-b ${isDarkMode ? "border-white/5" : "border-gray-100"} flex items-center justify-between`}>
+              <p className="font-bold text-sm">By Level</p>
+              <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{levelStats.length} levels</p>
+            </div>
+            <div className={`divide-y ${isDarkMode ? "divide-white/5" : "divide-gray-100"}`}>
+              {levelStats.map(ls => {
+                const color = getColor(ls.level);
+                const activePercent = ls.totalMembers > 0 ? Math.round((ls.activeMembers / ls.totalMembers) * 100) : 0;
+                return (
+                  <button
+                    key={ls.level}
+                    onClick={() => setSelectedLevel(ls)}
+                    className={`w-full text-left p-3.5 flex items-center gap-3 active:scale-[0.99] transition-all ${isDarkMode ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color.badge}`}>
+                      <span className="text-xs font-black">L{ls.level}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-sm">{ls.totalMembers} member{ls.totalMembers !== 1 ? "s" : ""}</p>
+                        <p className="font-bold text-sm text-blue-400 flex-shrink-0">{ls.totalBusiness > 0 ? `${ls.totalBusiness.toFixed(0)} USDT` : "—"}</p>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className={`flex-1 h-1.5 rounded-full ${isDarkMode ? "bg-white/10" : "bg-gray-200"}`}>
+                          <div className={`h-full rounded-full bg-gradient-to-r ${color.bar}`} style={{ width: `${activePercent}%` }} />
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="font-bold text-base">{ls.totalMembers}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="font-bold text-emerald-400 text-base">{ls.activeMembers}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right hidden sm:table-cell">
-                        <span className={`font-semibold ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{ls.inactiveMembers}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="font-bold text-blue-400">
-                          {ls.totalBusiness > 0 ? ls.totalBusiness.toFixed(0) : "—"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        <div className="flex items-center gap-2 justify-end">
-                          <div className={`flex-1 h-1.5 rounded-full min-w-[50px] max-w-[80px] ${isDarkMode ? "bg-white/10" : "bg-gray-200"}`}>
-                            <div
-                              className={`h-full rounded-full bg-gradient-to-r ${color.bar} transition-all`}
-                              style={{ width: `${activePercent}%` }}
-                            />
+                        <span className={`text-[10px] font-semibold flex-shrink-0 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{ls.activeMembers} active</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+            <div className={`px-4 py-3 flex items-center justify-between text-xs font-bold border-t-2 ${isDarkMode ? "border-white/10 bg-white/3 text-gray-200" : "border-gray-200 bg-gray-50 text-gray-800"}`}>
+              <span>Total: {totalAll}</span>
+              <span className="text-blue-400">{totalBusiness.toFixed(0)} USDT</span>
+            </div>
+          </div>
+
+          {/* ── Desktop / tablet: full table ── */}
+          <div className={`${card} overflow-hidden hidden md:block`}>
+            <div className={`px-4 py-3 border-b ${isDarkMode ? "border-white/5" : "border-gray-100"} flex items-center justify-between`}>
+              <p className="font-bold text-sm">Membership Breakdown by Level</p>
+              <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{levelStats.length} levels</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className={`text-xs uppercase tracking-wider ${isDarkMode ? "bg-white/3 text-gray-400" : "bg-gray-50 text-gray-500"}`}>
+                    <th className="px-4 py-3 text-left">Level No.</th>
+                    <th className="px-4 py-3 text-right">Member Count</th>
+                    <th className="px-4 py-3 text-right">Active Member</th>
+                    <th className="px-4 py-3 text-right hidden sm:table-cell">Inactive Member</th>
+                    <th className="px-4 py-3 text-right">Total Business (USDT)</th>
+                    <th className="px-4 py-3 text-center hidden sm:table-cell">Active %</th>
+                    <th className="px-4 py-3 text-center">Details</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isDarkMode ? "divide-white/5" : "divide-gray-100"}`}>
+                  {levelStats.map(ls => {
+                    const color = getColor(ls.level);
+                    const activePercent = ls.totalMembers > 0 ? Math.round((ls.activeMembers / ls.totalMembers) * 100) : 0;
+                    return (
+                      <tr key={ls.level} className={`transition-colors ${isDarkMode ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${color.dot}`} />
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${color.badge}`}>
+                              Level {ls.level}
+                            </span>
                           </div>
-                          <span className={`text-xs font-semibold w-8 text-right ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                            {activePercent}%
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-bold text-base">{ls.totalMembers}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-bold text-emerald-400 text-base">{ls.activeMembers}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right hidden sm:table-cell">
+                          <span className={`font-semibold ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{ls.inactiveMembers}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-bold text-blue-400">
+                            {ls.totalBusiness > 0 ? ls.totalBusiness.toFixed(0) : "—"}
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => setSelectedLevel(ls)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-                            isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                          }`}
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span className="hidden sm:inline">View</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className={`text-xs font-bold border-t-2 ${isDarkMode ? "border-white/10 bg-white/3 text-gray-200" : "border-gray-200 bg-gray-50 text-gray-800"}`}>
-                  <td className="px-4 py-3">Total</td>
-                  <td className="px-4 py-3 text-right text-base">{totalAll}</td>
-                  <td className="px-4 py-3 text-right text-emerald-400 text-base">{totalActive}</td>
-                  <td className="px-4 py-3 text-right hidden sm:table-cell text-gray-400">{totalInactive}</td>
-                  <td className="px-4 py-3 text-right text-blue-400 text-base">{totalBusiness.toFixed(0)}</td>
-                  <td className="px-4 py-3 text-center hidden sm:table-cell text-amber-400">
-                    {totalAll > 0 ? Math.round((totalActive / totalAll) * 100) : 0}%
-                  </td>
-                  <td className="px-4 py-3" />
-                </tr>
-              </tfoot>
-            </table>
+                        </td>
+                        <td className="px-4 py-3 hidden sm:table-cell">
+                          <div className="flex items-center gap-2 justify-end">
+                            <div className={`flex-1 h-1.5 rounded-full min-w-[50px] max-w-[80px] ${isDarkMode ? "bg-white/10" : "bg-gray-200"}`}>
+                              <div
+                                className={`h-full rounded-full bg-gradient-to-r ${color.bar} transition-all`}
+                                style={{ width: `${activePercent}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs font-semibold w-8 text-right ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                              {activePercent}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => setSelectedLevel(ls)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                              isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span className="hidden sm:inline">View</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className={`text-xs font-bold border-t-2 ${isDarkMode ? "border-white/10 bg-white/3 text-gray-200" : "border-gray-200 bg-gray-50 text-gray-800"}`}>
+                    <td className="px-4 py-3">Total</td>
+                    <td className="px-4 py-3 text-right text-base">{totalAll}</td>
+                    <td className="px-4 py-3 text-right text-emerald-400 text-base">{totalActive}</td>
+                    <td className="px-4 py-3 text-right hidden sm:table-cell text-gray-400">{totalInactive}</td>
+                    <td className="px-4 py-3 text-right text-blue-400 text-base">{totalBusiness.toFixed(0)}</td>
+                    <td className="px-4 py-3 text-center hidden sm:table-cell text-amber-400">
+                      {totalAll > 0 ? Math.round((totalActive / totalAll) * 100) : 0}%
+                    </td>
+                    <td className="px-4 py-3" />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <p className={`text-xs text-center ${isDarkMode ? "text-gray-600" : "text-gray-400"}`}>
@@ -1234,6 +1499,12 @@ export default function DashboardPage() {
   const [treeData, setTreeData] = useState<UserNode | null>(null);
   const [treeLoading, setTreeLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Full-screen zoom for investment-list screenshot thumbnails
+  const [zoomScreenshot, setZoomScreenshot] = useState<string | null>(null);
+
+  // Admin focus when clicking a pending payment from dashboard
+  const [adminFocusPaymentId, setAdminFocusPaymentId] = useState<string | null>(null);
 
   const isAdmin = user?.userCode === SUPER_ADMIN_CODE;
 
@@ -1350,8 +1621,6 @@ export default function DashboardPage() {
       if (data.success) {
         const normalized = normalizeTreeNode(data.data);
         setTreeData(normalized);
-        // Optional debug:
-        // debugTree(normalized);
       } else {
         toast.error(data.message || "Failed to load network data");
       }
@@ -1564,11 +1833,17 @@ export default function DashboardPage() {
   ];
 
   const handleTabClick = (tabId: string) => {
+    if (tabId !== "admin") setAdminFocusPaymentId(null);
     if (tabId === "connectBroker") {
       router.push("/connect-broker");
     } else {
       setActiveTab(tabId);
     }
+  };
+
+  const handleAdminPaymentSelect = (paymentId: string) => {
+    setAdminFocusPaymentId(paymentId);
+    setActiveTab("admin");
   };
 
   const bg   = isDarkMode ? "min-h-screen bg-[#080c14] text-white" : "min-h-screen bg-gray-50 text-gray-900";
@@ -1615,10 +1890,10 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-lg hover:bg-white/5" aria-label="Toggle theme">
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-lg hover:bg-white/5 active:scale-95 transition-all" aria-label="Toggle theme">
               {isDarkMode ? <Sun className="w-4 h-4 text-gray-400" /> : <Moon className="w-4 h-4 text-gray-400" />}
             </button>
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-lg hover:bg-white/5" aria-label="Menu">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-lg hover:bg-white/5 active:scale-95 transition-all" aria-label="Menu">
               <Menu className="w-5 h-5" />
             </button>
           </div>
@@ -1629,14 +1904,14 @@ export default function DashboardPage() {
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className={`absolute right-0 top-0 h-full w-64 ${isDarkMode ? "bg-[#111827]" : "bg-white"} shadow-2xl`}>
+          <div className={`absolute right-0 top-0 h-full w-64 max-w-[80vw] ${isDarkMode ? "bg-[#111827]" : "bg-white"} shadow-2xl overflow-y-auto`}>
             <div className={`p-4 border-b ${isDarkMode ? "border-white/10" : "border-gray-100"}`}>
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white font-black text-sm">
+                <div className="w-11 h-11 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white font-black text-sm flex-shrink-0">
                   {getInitials(user.name)}
                 </div>
-                <div>
-                  <p className="font-bold text-sm">{user.name}</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm truncate">{user.name}</p>
                   {user.userCode && <p className="text-xs text-red-400 font-mono">{user.userCode}</p>}
                 </div>
               </div>
@@ -1646,18 +1921,18 @@ export default function DashboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => { handleTabClick(tab.id); setIsMobileMenuOpen(false); }}
-                  className={`flex items-center gap-3 w-full p-3.5 rounded-xl transition-all text-sm ${
+                  className={`flex items-center gap-3 w-full p-3.5 rounded-xl transition-all text-sm active:scale-[0.98] ${
                     activeTab === tab.id
                       ? "bg-red-500 text-white font-bold"
                       : isDarkMode ? "text-gray-300 hover:bg-white/5" : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{tab.label}</span>
                 </button>
               ))}
               <div className={`pt-2 mt-2 border-t ${isDarkMode ? "border-white/10" : "border-gray-100"}`}>
-                <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3.5 rounded-xl text-red-400 hover:bg-red-400/10 text-sm">
+                <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3.5 rounded-xl text-red-400 hover:bg-red-400/10 text-sm active:scale-[0.98] transition-all">
                   <LogOut className="w-4 h-4" /> Logout
                 </button>
               </div>
@@ -1700,6 +1975,28 @@ export default function DashboardPage() {
 
       {/* Mobile Content */}
       <div className="md:hidden p-3 pb-6">{renderContent()}</div>
+
+      {/* Global mobile zoom overlay for investment-list screenshots */}
+      {zoomScreenshot && (
+        <div
+          className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
+          onClick={() => setZoomScreenshot(null)}
+        >
+          <button
+            onClick={() => setZoomScreenshot(null)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={zoomScreenshot}
+            alt="Screenshot full view"
+            className="max-w-full max-h-full object-contain rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 
@@ -1716,7 +2013,7 @@ export default function DashboardPage() {
       case "finance":     return renderFinance();
       case "share":       return renderShare();
       case "settings":    return renderSettings();
-      case "admin":       return isAdmin ? <AdminPanel isDarkMode={isDarkMode} card={card} /> : renderDashboard();
+      case "admin":       return isAdmin ? <AdminPanel isDarkMode={isDarkMode} card={card} focusPaymentId={adminFocusPaymentId} /> : renderDashboard();
       default:            return renderDashboard();
     }
   }
@@ -1724,13 +2021,8 @@ export default function DashboardPage() {
   // ─── Dashboard Render (FIXED — real wallet-based earnings only) ────────────
 
   function renderDashboard() {
-    // ⭐ REAL data — comes from portfolio.totalInterestEarned which the backend
-    // now derives from user.walletBalance (credited only by actual admin
-    // profit distributions). No formula-based projection anymore.
     const totalInterestEarned = portfolio?.totalInterestEarned || 0;
     const totalInvested       = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
-    // ⭐ REMOVED: totalDailyReturn — this was a pure formula (amount × rate ÷ 30)
-    // that showed money "earning" every second with no real distribution event.
 
     return (
       <div className="space-y-4 md:space-y-5 max-w-4xl mx-auto">
@@ -1741,7 +2033,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {isAdmin && (
-              <button onClick={() => setActiveTab("admin")} className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-2.5 rounded-xl text-xs font-bold hover:bg-red-500/20 transition-all">
+              <button onClick={() => setActiveTab("admin")} className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-2.5 rounded-xl text-xs font-bold hover:bg-red-500/20 active:scale-95 transition-all">
                 <ShieldCheck className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Admin</span>
               </button>
             )}
@@ -1773,6 +2065,15 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* Admin Quick View Panel */}
+        {isAdmin && (
+          <AdminDashboardPanel
+            isDarkMode={isDarkMode}
+            card={card}
+            onSelectPayment={handleAdminPaymentSelect}
+          />
+        )}
+
         {approvedPayments.length > 0 && (
           <div className={card}>
             <div className="p-3 md:p-5">
@@ -1792,8 +2093,6 @@ export default function DashboardPage() {
                           <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{new Date(payment.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          {/* ⭐ REMOVED: fake calc?.totalInterest "earned" figure.
-                              Real earnings only shown at portfolio level (Wallet Balance stat above). */}
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                             calc?.isMatured
                               ? "bg-emerald-400/10 text-emerald-400"
@@ -1846,7 +2145,7 @@ export default function DashboardPage() {
             <p className={`text-xs md:text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-4`}>
               Invest 50–5,000 USDT and earn attractive monthly returns with flexible plans.
             </p>
-            <button onClick={() => setActiveTab("investments")} className="bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition-all text-sm">
+            <button onClick={() => setActiveTab("investments")} className="bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all text-sm">
               Make First Investment
             </button>
           </div>
@@ -1860,14 +2159,12 @@ export default function DashboardPage() {
   function renderInvestments() {
     const amountVal = parseFloat(paymentForm.amount) || 0;
 
-    // Compute branch investment (still needed to set the hidden monthly rate & max months)
     let branchTotal = 0;
     if (treeData && !treeLoading) {
       branchTotal = computeBranchInvestment(treeData);
     }
     const { rate: dynamicRate, months: dynamicMonths } = getRateAndMonths(branchTotal);
 
-    // Plans are still used to pre‑fill amount + hidden rate/months, but user sees no rate
     const plans = [
       { amount: 100, label: "Starter", tagline: "Try it out", badge: "OFFER", icon: Sparkles, accent: "from-amber-400 to-orange-500", glow: "shadow-[0_8px_24px_-8px_rgba(251,191,36,0.35)]", glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(251,191,36,0.5)]", ring: "hover:ring-amber-400/40", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"], highlight: false },
       { amount: 200, label: "Basic", tagline: "Get started", badge: null, icon: Rocket, accent: "from-blue-400 to-cyan-500", glow: "shadow-[0_8px_24px_-8px_rgba(59,130,246,0.35)]", glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(59,130,246,0.5)]", ring: "hover:ring-blue-400/40", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"], highlight: false },
@@ -1879,7 +2176,7 @@ export default function DashboardPage() {
       setPaymentForm({
         ...paymentForm,
         amount: String(plan.amount),
-        monthlyRate: dynamicRate,   // still set internally, but never shown
+        monthlyRate: dynamicRate,
         maxMonths: dynamicMonths,
       });
       setShowAddPayment(true);
@@ -1890,10 +2187,9 @@ export default function DashboardPage() {
 
     return (
       <div className="space-y-5 max-w-5xl mx-auto">
-        {/* Header – no rate display */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-black">Investments</h1>
+            <h1 className="text-lg xs:text-xl md:text-2xl font-black">Investments</h1>
           </div>
           <button
             onClick={() => {
@@ -1906,7 +2202,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Pricing Plan Cards – no monthly rate shown */}
         <div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
             {plans.map((plan) => {
@@ -1914,7 +2209,7 @@ export default function DashboardPage() {
               return (
                 <div
                   key={plan.amount}
-                  className={`group relative flex-shrink-0 w-[72%] xs:w-[64%] sm:w-[42%] md:w-auto snap-center rounded-xl overflow-hidden transition-all duration-300 ease-out active:scale-[0.97] hover:-translate-y-1 ring-1 ring-transparent ${plan.ring} ${
+                  className={`group relative flex-shrink-0 w-[78%] xs:w-[68%] sm:w-[42%] md:w-auto snap-center rounded-xl overflow-hidden transition-all duration-300 ease-out active:scale-[0.97] hover:-translate-y-1 ring-1 ring-transparent ${plan.ring} ${
                     plan.highlight
                       ? `bg-gradient-to-b ${isDarkMode ? "from-[#1a1024] to-[#150c1e]" : "from-red-50 to-white"} ring-2 ring-red-500/70 ${plan.glow} ${plan.glowHover}`
                       : isDarkMode
@@ -1984,7 +2279,6 @@ export default function DashboardPage() {
           <p className={`md:hidden text-center text-[10px] mt-1 ${isDarkMode ? "text-gray-600" : "text-gray-400"}`}>← swipe to see all plans →</p>
         </div>
 
-        {/* Mobile custom-amount button */}
         <button
           onClick={() => {
             setPaymentForm({ ...paymentForm, monthlyRate: dynamicRate, maxMonths: dynamicMonths });
@@ -2008,6 +2302,7 @@ export default function DashboardPage() {
                   <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>Amount (USDT) *</label>
                   <input
                     type="number"
+                    inputMode="decimal"
                     value={paymentForm.amount}
                     onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
                     className={`${input} !rounded-lg`}
@@ -2034,7 +2329,7 @@ export default function DashboardPage() {
                     MT5 Deposit Screenshot *
                   </label>
                   <div
-                    className={`relative rounded-xl p-5 text-center transition-all duration-300 overflow-hidden group ${
+                    className={`relative rounded-xl p-4 xs:p-5 text-center transition-all duration-300 overflow-hidden group ${
                       paymentForm.screenshot
                         ? isDarkMode
                           ? "border border-emerald-500/30 bg-emerald-500/[0.04]"
@@ -2050,7 +2345,7 @@ export default function DashboardPage() {
                           <img
                             src={URL.createObjectURL(paymentForm.screenshot)}
                             alt="Preview"
-                            className={`mx-auto h-28 w-auto object-contain rounded-lg shadow-md ring-1 ${isDarkMode ? "ring-white/10" : "ring-gray-200"}`}
+                            className={`mx-auto h-24 xs:h-28 w-auto object-contain rounded-lg shadow-md ring-1 ${isDarkMode ? "ring-white/10" : "ring-gray-200"}`}
                           />
                           <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-md ring-2 ring-[#111827]">
                             <CheckCircle className="w-3.5 h-3.5 text-white" strokeWidth={3} />
@@ -2060,11 +2355,11 @@ export default function DashboardPage() {
                           <p className={`text-xs truncate max-w-[160px] font-medium ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{paymentForm.screenshot.name}</p>
                         </div>
                         <div className="flex items-center justify-center gap-3">
-                          <label className={`text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"}`}>
+                          <label className={`text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all active:scale-95 ${isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"}`}>
                             Replace
                             <input type="file" accept="image/*" onChange={(e) => setPaymentForm({ ...paymentForm, screenshot: e.target.files?.[0] || null })} className="hidden" />
                           </label>
-                          <button onClick={() => setPaymentForm({ ...paymentForm, screenshot: null })} className="text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                          <button onClick={() => setPaymentForm({ ...paymentForm, screenshot: null })} className="text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/10 active:scale-95 transition-all">
                             Remove
                           </button>
                         </div>
@@ -2103,14 +2398,13 @@ export default function DashboardPage() {
                       "Submit Investment"
                     )}
                   </button>
-                  <button onClick={() => setShowAddPayment(false)} className={`px-4 py-3 rounded-lg border text-sm transition-colors ${isDarkMode ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"}`}>Cancel</button>
+                  <button onClick={() => setShowAddPayment(false)} className={`px-4 py-3 rounded-lg border text-sm transition-colors active:scale-95 ${isDarkMode ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"}`}>Cancel</button>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Payments list – interest details removed from approved payments */}
         {paymentsLoading ? (
           <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-t-transparent border-red-500 rounded-full animate-spin" /></div>
         ) : payments.length === 0 ? (
@@ -2128,9 +2422,13 @@ export default function DashboardPage() {
                   <div className="p-3 md:p-4">
                     <div className="flex items-start justify-between mb-2.5 gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDarkMode ? "bg-red-500/10" : "bg-red-50"}`}>
-                          <DollarSign className="w-4 h-4 text-red-400" />
-                        </div>
+                        <button
+                          onClick={() => setZoomScreenshot(payment.screenshot)}
+                          className={`w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border active:scale-95 transition-all ${isDarkMode ? "border-white/10" : "border-gray-200"}`}
+                          aria-label="Zoom screenshot"
+                        >
+                          <img src={payment.screenshot} alt="Screenshot" className="w-full h-full object-cover" loading="lazy" />
+                        </button>
                         <div className="min-w-0">
                           <p className="font-bold text-sm md:text-base">{payment.amount} <span className="text-xs md:text-sm font-normal text-gray-400">USDT</span></p>
                           <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
@@ -2143,8 +2441,8 @@ export default function DashboardPage() {
                           <StatusIcon className={`w-3 h-3 ${statusCfg.color}`} />
                           <span className={`${statusCfg.color} hidden sm:inline`}>{statusCfg.label}</span>
                         </div>
-                        <button onClick={() => window.open(payment.screenshot, "_blank")} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"><Eye className="w-3.5 h-3.5 text-gray-400" /></button>
-                        <button onClick={() => handleDeletePayment(payment._id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setZoomScreenshot(payment.screenshot)} className="p-1.5 rounded-lg hover:bg-white/5 active:scale-95 transition-colors"><Eye className="w-3.5 h-3.5 text-gray-400" /></button>
+                        <button onClick={() => handleDeletePayment(payment._id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 active:scale-95 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                     {payment.status === "pending" && (
@@ -2181,18 +2479,18 @@ export default function DashboardPage() {
 
     return (
       <div className="space-y-4 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="text-lg md:text-2xl font-black">Profile</h1>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm active:scale-95 transition-all">
               <Edit2 className="w-3.5 h-3.5" /> Edit
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm active:scale-95 transition-all">
                 <Save className="w-3.5 h-3.5" /> Save
               </button>
-              <button onClick={() => setIsEditing(false)} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm border ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
+              <button onClick={() => setIsEditing(false)} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm border active:scale-95 transition-all ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
             </div>
           )}
         </div>
@@ -2202,10 +2500,10 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Your User Code</p>
-                <p className="text-xl md:text-3xl font-black text-red-400 font-mono truncate">{user!.userCode}</p>
+                <p className="text-lg xs:text-xl md:text-3xl font-black text-red-400 font-mono truncate">{user!.userCode}</p>
                 <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Login ID · Referral ID</p>
               </div>
-              <button onClick={handleCopyCode} className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"}`}>
+              <button onClick={handleCopyCode} className={`p-2.5 rounded-xl transition-all flex-shrink-0 active:scale-95 ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"}`}>
                 {copied ? <CheckCircle className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-red-400" />}
               </button>
             </div>
@@ -2289,18 +2587,18 @@ export default function DashboardPage() {
 
     return (
       <div className="space-y-4 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="text-lg md:text-2xl font-black">Finance Details</h1>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 bg-red-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm active:scale-95 transition-all">
               <Edit2 className="w-3.5 h-3.5" /> Edit
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm">
+              <button onClick={handleSaveProfile} className="flex items-center gap-1.5 bg-emerald-500 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm active:scale-95 transition-all">
                 <Save className="w-3.5 h-3.5" /> Save
               </button>
-              <button onClick={() => setIsEditing(false)} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm border ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
+              <button onClick={() => setIsEditing(false)} className={`px-3 py-2.5 rounded-xl text-xs md:text-sm border active:scale-95 transition-all ${isDarkMode ? "border-white/10" : "border-gray-200"}`}>Cancel</button>
             </div>
           )}
         </div>
@@ -2433,7 +2731,7 @@ export default function DashboardPage() {
               <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Your Referral Link</label>
               <div className={`flex items-center gap-2 p-3 rounded-xl mb-3 ${isDarkMode ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
                 <p className={`flex-1 text-xs truncate font-mono ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>{shareLink}</p>
-                <button onClick={handleCopyShareLink} className="bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex-shrink-0">
+                <button onClick={handleCopyShareLink} className="bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex-shrink-0 active:scale-95 transition-all">
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
@@ -2511,7 +2809,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ))}
-              <button onClick={handleUpdatePassword} className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl text-sm">
+              <button onClick={handleUpdatePassword} className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-all">
                 Update Password
               </button>
             </div>
@@ -2520,7 +2818,7 @@ export default function DashboardPage() {
         <div className={`${card} p-3 md:p-4`}>
           <h3 className="font-bold text-sm mb-0.5">Session</h3>
           <p className={`text-xs mb-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Sign out of your account</p>
-          <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/20 font-bold px-4 py-2.5 rounded-xl w-full justify-center text-sm">
+          <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/20 font-bold px-4 py-2.5 rounded-xl w-full justify-center text-sm active:scale-[0.98] transition-all">
             <LogOut className="w-4 h-4" /> Logout
           </button>
         </div>
