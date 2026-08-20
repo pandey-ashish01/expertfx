@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 // ---------------------------
 // Types and Data
@@ -99,13 +100,28 @@ function useScrollDetection(threshold = 50) {
 // Main Component
 // ---------------------------
 export default function ConnectBrokerPage() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const isScrolled = useScrollDetection();
   const partnerCode = "X8BFK";
+
+  // ✅ Check login status (no redirect)
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+    setIsLoggedIn(!!(token && userData));
+  }, []);
 
   const copyCode = useCallback(() => {
     navigator.clipboard.writeText(partnerCode);
   }, [partnerCode]);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsLoggedIn(false);
+    router.push("/");
+  };
 
   return (
     <div className="bg-[#0f1117] text-white min-h-screen antialiased">
@@ -141,15 +157,34 @@ export default function ConnectBrokerPage() {
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-5">
-              <Link href="/Login" className="text-[13px] text-slate-400 hover:text-white transition-colors">
-                Sign In
-              </Link>
-              <Link
-                href="#open-account"
-                className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-medium text-[13px] rounded-[5px] transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:scale-105 active:scale-95"
-              >
-                Get Started
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-[13px] text-slate-400 hover:text-white transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-[13px] text-slate-400 hover:text-red-400 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/Login" className="text-[13px] text-slate-400 hover:text-white transition-colors">
+                    Sign In
+                  </Link>
+                  <Link
+                    href="#open-account"
+                    className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-medium text-[13px] rounded-[5px] transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:scale-105 active:scale-95"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -172,7 +207,9 @@ export default function ConnectBrokerPage() {
         {/* Mobile Menu */}
         <div
           className={`md:hidden transition-all duration-300 overflow-hidden ${
-            mobileMenuOpen ? "max-h-96 bg-[#0f1117]/98 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/20" : "max-h-0"
+            mobileMenuOpen
+              ? "max-h-96 bg-[#0f1117]/98 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/20"
+              : "max-h-0"
           }`}
         >
           <div className="px-5 py-6 space-y-1">
@@ -186,19 +223,43 @@ export default function ConnectBrokerPage() {
                 {id === "open-account" ? "Open Account" : id === "login" ? "Login" : "Copy Trading"}
               </a>
             ))}
+
             <div className="pt-4 flex gap-3">
-              <Link
-                href="/Login"
-                className="flex-1 text-center px-4 py-3 border border-white/10 text-slate-400 text-sm rounded-[5px] hover:border-white/20 transition-all"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="#open-account"
-                className="flex-1 text-center px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-[5px] shadow-lg shadow-red-500/20"
-              >
-                Get Started
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="flex-1 text-center px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-[5px] shadow-lg shadow-red-500/20"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex-1 text-center px-4 py-3 border border-white/10 text-slate-400 text-sm rounded-[5px] hover:border-red-400/30 hover:text-red-400 transition-all"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/Login"
+                    className="flex-1 text-center px-4 py-3 border border-white/10 text-slate-400 text-sm rounded-[5px] hover:border-white/20 transition-all"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="#open-account"
+                    className="flex-1 text-center px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-[5px] shadow-lg shadow-red-500/20"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -226,9 +287,10 @@ export default function ConnectBrokerPage() {
             const offer = offers[key];
             return (
               <section key={key} id={key} className="scroll-mt-24">
-                <div className="bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] overflow-hidden transition-all duration-300 hover:border-red-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-500/5
-                  shadow-[0_8px_30px_rgba(0,0,0,0.3)] sm:shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
-                  
+                <div
+                  className="bg-[#1a1d25] border border-[#2a2d35] rounded-[5px] overflow-hidden transition-all duration-300 hover:border-red-500/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-500/5
+                  shadow-[0_8px_30px_rgba(0,0,0,0.3)] sm:shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
+                >
                   {/* Image - full width, no clipping, no fixed height */}
                   <Image
                     src={offer.image}
