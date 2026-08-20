@@ -32,7 +32,7 @@ export async function PUT(
     if (!decoded)
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
 
-    if (decoded.userCode !== "EXPERT000")
+    if (decoded.userCode !== "EFX0000")
       return NextResponse.json({ success: false, message: "Access denied. Admins only." }, { status: 403 });
 
     const { status } = await req.json();
