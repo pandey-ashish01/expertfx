@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle, XCircle, Clock, Eye, Users,
-  LogOut, AlertCircle, RefreshCw
+  LogOut, AlertCircle, RefreshCw, X, AlertTriangle
 } from "lucide-react";
 
 interface Payment {
@@ -19,6 +19,14 @@ interface Payment {
   userId: string;
 }
 
+interface ConfirmState {
+  userId: string;
+  paymentId: string;
+  status: "approved" | "rejected";
+  userName: string;
+  amount: number;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -26,6 +34,7 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -59,7 +68,21 @@ export default function AdminPage() {
     }
   };
 
-  const handleAction = async (userId: string, paymentId: string, status: "approved" | "rejected") => {
+  // Opens the confirmation modal instead of acting immediately
+  const requestAction = (payment: Payment, status: "approved" | "rejected") => {
+    setConfirmState({
+      userId: payment.userId,
+      paymentId: payment._id,
+      status,
+      userName: payment.userName,
+      amount: payment.amount,
+    });
+  };
+
+  // Actually performs the API call — called only after modal confirm
+  const confirmAction = async () => {
+    if (!confirmState) return;
+    const { userId, paymentId, status } = confirmState;
     setActionLoading(paymentId);
     try {
       const token = localStorage.getItem("token");
@@ -85,6 +108,7 @@ export default function AdminPage() {
       alert("Network error");
     } finally {
       setActionLoading(null);
+      setConfirmState(null);
     }
   };
 
@@ -107,7 +131,7 @@ export default function AdminPage() {
           </div>
           <div>
             <h1 className="font-black text-lg">Super Admin</h1>
-            <p className="text-xs text-amber-400">EFXO000 · SUMANTA NANDI</p>
+            <p className="text-xs text-amber-400">EFX0000 · SUMANTA NANDI</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -223,11 +247,11 @@ export default function AdminPage() {
                   </button>
                 </div>
 
-                {/* Actions — only for pending */}
+                {/* Actions — only for pending — now open confirm modal */}
                 {payment.status === "pending" && (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleAction(payment.userId, payment._id, "approved")}
+                      onClick={() => requestAction(payment, "approved")}
                       disabled={actionLoading === payment._id}
                       className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50"
                     >
@@ -239,7 +263,7 @@ export default function AdminPage() {
                       Approve
                     </button>
                     <button
-                      onClick={() => handleAction(payment.userId, payment._id, "rejected")}
+                      onClick={() => requestAction(payment, "rejected")}
                       disabled={actionLoading === payment._id}
                       className="flex-1 flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50"
                     >
@@ -253,6 +277,84 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmState && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => actionLoading ? null : setConfirmState(null)}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-[#111827] border border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <button
+              onClick={() => setConfirmState(null)}
+              disabled={!!actionLoading}
+              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/5 text-gray-400 disabled:opacity-30"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+              confirmState.status === "approved"
+                ? "bg-emerald-500/10"
+                : "bg-red-500/10"
+            }`}>
+              {confirmState.status === "approved" ? (
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              ) : (
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              )}
+            </div>
+
+            <h2 className="text-lg font-black mb-1">
+              {confirmState.status === "approved" ? "Approve Payment?" : "Reject Payment?"}
+            </h2>
+            <p className="text-sm text-gray-400 mb-5">
+              {confirmState.status === "approved"
+                ? "Are you sure you want to approve this investment? This action cannot be undone."
+                : "Are you sure you want to reject this investment? This action cannot be undone."}
+            </p>
+
+            <div className="bg-white/5 rounded-xl p-3 mb-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">{confirmState.userName}</p>
+                <p className="text-xs text-gray-500">Payment ID: {confirmState.paymentId.slice(-8)}</p>
+              </div>
+              <p className="text-lg font-black">{confirmState.amount} <span className="text-xs font-normal text-gray-400">USDT</span></p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmState(null)}
+                disabled={!!actionLoading}
+                className="flex-1 py-3 rounded-xl border border-white/10 text-sm font-semibold hover:bg-white/5 transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                disabled={!!actionLoading}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  confirmState.status === "approved"
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-black"
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
+              >
+                {actionLoading ? (
+                  <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin" />
+                ) : confirmState.status === "approved" ? (
+                  "Yes, Approve"
+                ) : (
+                  "Yes, Reject"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

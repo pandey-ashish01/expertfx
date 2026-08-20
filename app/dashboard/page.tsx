@@ -10,7 +10,7 @@ import {
   Copy, Zap, BarChart3, Wallet, Star, Shield, Activity,
   ShieldCheck, Network, ChevronDown, ChevronRight,
   FileText, ArrowLeft, Globe, Sparkles, Rocket, Award, Flame,
-  Link2
+  Link2, AlertTriangle, Calendar, Hash, Image as ImageIcon, ExternalLink
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import ProfitDistributionPanel from "@/components/ProfitDistribution";
@@ -179,12 +179,25 @@ interface AdminPayment {
   maxMonths?: number;
 }
 
+interface ConfirmState {
+  userId: string;
+  paymentId: string;
+  status: "approved" | "rejected";
+  userName: string;
+  amount: number;
+}
+
 function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string }) {
   const [payments, setPayments] = useState<AdminPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  // Confirmation modal (approve/reject)
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  // Full-detail view modal (screenshot, date/time, everything)
+  const [viewPayment, setViewPayment] = useState<AdminPayment | null>(null);
 
   useEffect(() => { fetchPayments(); }, []);
 
@@ -206,7 +219,21 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
     }
   };
 
-  const handleAction = async (userId: string, paymentId: string, status: "approved" | "rejected") => {
+  // Opens confirmation modal instead of acting immediately
+  const requestAction = (payment: AdminPayment, status: "approved" | "rejected") => {
+    setConfirmState({
+      userId: payment.userId,
+      paymentId: payment._id,
+      status,
+      userName: payment.userName,
+      amount: payment.amount,
+    });
+  };
+
+  // Actually performs the API call — only after modal confirm
+  const confirmAction = async () => {
+    if (!confirmState) return;
+    const { userId, paymentId, status } = confirmState;
     setActionLoading(paymentId);
     try {
       const token = localStorage.getItem("token");
@@ -218,6 +245,8 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
       const data = await res.json();
       if (data.success) {
         setPayments((prev) => prev.map((p) => p._id === paymentId ? { ...p, status } : p));
+        // Keep the detail modal's data in sync if it's open on the same payment
+        setViewPayment((prev) => (prev && prev._id === paymentId ? { ...prev, status } : prev));
         toast.success(`Payment ${status}`);
       } else {
         toast.error(data.message || "Error");
@@ -226,6 +255,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
       toast.error("Network error");
     } finally {
       setActionLoading(null);
+      setConfirmState(null);
     }
   };
 
@@ -332,14 +362,15 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                     </p>
                   )}
                 </div>
-                <button onClick={() => window.open(payment.screenshot, "_blank")} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs md:text-sm transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
+                {/* View now opens the full-detail modal instead of a raw new tab */}
+                <button onClick={() => setViewPayment(payment)} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs md:text-sm transition-all ${isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}>
                   <Eye className="w-3.5 h-3.5" /> View
                 </button>
               </div>
               {payment.status === "pending" && (
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleAction(payment.userId, payment._id, "approved")}
+                    onClick={() => requestAction(payment, "approved")}
                     disabled={actionLoading === payment._id}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
                   >
@@ -347,7 +378,7 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
                     Approve
                   </button>
                   <button
-                    onClick={() => handleAction(payment.userId, payment._id, "rejected")}
+                    onClick={() => requestAction(payment, "rejected")}
                     disabled={actionLoading === payment._id}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
                   >
@@ -357,6 +388,195 @@ function AdminPanel({ isDarkMode, card }: { isDarkMode: boolean; card: string })
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ─── Full Detail View Modal ─────────────────────────────── */}
+      {viewPayment && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setViewPayment(null)}
+          />
+          <div className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDarkMode ? "bg-[#111827] border border-white/10" : "bg-white border border-gray-200"}`}>
+            {/* Header */}
+            <div className={`sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl ${isDarkMode ? "border-white/10 bg-[#111827]/95" : "border-gray-100 bg-white/95"}`}>
+              <h2 className="font-black text-base">Payment Details</h2>
+              <button onClick={() => setViewPayment(null)} className={`p-1.5 rounded-lg ${isDarkMode ? "hover:bg-white/10" : "hover:bg-gray-100"}`}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* User */}
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0">
+                  {viewPayment.userName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm truncate">{viewPayment.userName}</p>
+                  <p className="text-xs text-red-400 font-mono">{viewPayment.userCode}</p>
+                  <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>{viewPayment.userMobile}</p>
+                </div>
+                <div className={`ml-auto px-2.5 py-1 rounded-full border text-xs font-semibold flex-shrink-0 ${statusStyle[viewPayment.status]}`}>
+                  {viewPayment.status}
+                </div>
+              </div>
+
+              {/* Screenshot */}
+              <div>
+                <p className={`text-xs font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                  <ImageIcon className="w-3.5 h-3.5" /> Screenshot
+                </p>
+                <div className={`rounded-xl overflow-hidden border ${isDarkMode ? "border-white/10 bg-black/20" : "border-gray-200 bg-gray-50"}`}>
+                  <img
+                    src={viewPayment.screenshot}
+                    alt="Payment screenshot"
+                    className="w-full max-h-80 object-contain"
+                  />
+                </div>
+                <button
+                  onClick={() => window.open(viewPayment.screenshot, "_blank")}
+                  className={`mt-2 flex items-center gap-1.5 text-xs font-semibold ${isDarkMode ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Open full size in new tab
+                </button>
+              </div>
+
+              {/* Payment info grid */}
+              <div className={`rounded-xl p-4 grid grid-cols-2 gap-4 ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
+                <div>
+                  <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Amount</p>
+                  <p className="font-black text-lg">{viewPayment.amount} <span className="text-xs font-normal text-gray-400">USDT</span></p>
+                </div>
+                <div>
+                  <p className={`text-xs mb-1 flex items-center gap-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}><Calendar className="w-3 h-3" /> Date & Time</p>
+                  <p className="font-semibold text-sm">
+                    {new Date(viewPayment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                    {new Date(viewPayment.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {viewPayment.monthlyRate !== undefined && (
+                  <div>
+                    <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Monthly Rate</p>
+                    <p className="font-semibold text-sm">{(viewPayment.monthlyRate * 100).toFixed(1)}%</p>
+                  </div>
+                )}
+                {viewPayment.maxMonths !== undefined && (
+                  <div>
+                    <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Duration</p>
+                    <p className="font-semibold text-sm">{viewPayment.maxMonths} months</p>
+                  </div>
+                )}
+                <div className="col-span-2">
+                  <p className={`text-xs mb-1 flex items-center gap-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}><Hash className="w-3 h-3" /> Payment ID</p>
+                  <p className="font-mono text-xs break-all">{viewPayment._id}</p>
+                </div>
+              </div>
+
+              {viewPayment.description && (
+                <div>
+                  <p className={`text-xs font-semibold uppercase tracking-widest mb-1.5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Note</p>
+                  <p className={`text-sm p-3 rounded-xl ${isDarkMode ? "bg-white/5 text-gray-300" : "bg-gray-50 text-gray-700"}`}>{viewPayment.description}</p>
+                </div>
+              )}
+
+              {/* Approve / Reject directly from this modal */}
+              {viewPayment.status === "pending" && (
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => requestAction(viewPayment, "approved")}
+                    disabled={actionLoading === viewPayment._id}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Approve
+                  </button>
+                  <button
+                    onClick={() => requestAction(viewPayment, "rejected")}
+                    disabled={actionLoading === viewPayment._id}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+                  >
+                    <XCircle className="w-4 h-4" /> Reject
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Confirmation Modal (Approve / Reject) ─────────────────────────────── */}
+      {confirmState && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => (actionLoading ? null : setConfirmState(null))}
+          />
+          <div className={`relative w-full max-w-sm rounded-2xl p-6 shadow-2xl ${isDarkMode ? "bg-[#111827] border border-white/10" : "bg-white border border-gray-200"}`}>
+            <button
+              onClick={() => setConfirmState(null)}
+              disabled={!!actionLoading}
+              className={`absolute top-4 right-4 p-1.5 rounded-lg disabled:opacity-30 ${isDarkMode ? "hover:bg-white/5 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+              confirmState.status === "approved" ? "bg-emerald-500/10" : "bg-red-500/10"
+            }`}>
+              {confirmState.status === "approved" ? (
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              ) : (
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              )}
+            </div>
+
+            <h2 className="text-lg font-black mb-1">
+              {confirmState.status === "approved" ? "Approve Payment?" : "Reject Payment?"}
+            </h2>
+            <p className={`text-sm mb-5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+              {confirmState.status === "approved"
+                ? "Are you sure you want to approve this investment? This action cannot be undone."
+                : "Are you sure you want to reject this investment? This action cannot be undone."}
+            </p>
+
+            <div className={`rounded-xl p-3 mb-5 flex items-center justify-between ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
+              <div>
+                <p className="text-sm font-bold">{confirmState.userName}</p>
+                <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Payment ID: {confirmState.paymentId.slice(-8)}</p>
+              </div>
+              <p className="text-lg font-black">{confirmState.amount} <span className="text-xs font-normal text-gray-400">USDT</span></p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmState(null)}
+                disabled={!!actionLoading}
+                className={`flex-1 py-3 rounded-xl border text-sm font-semibold transition-all disabled:opacity-50 ${isDarkMode ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                disabled={!!actionLoading}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  confirmState.status === "approved"
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-black"
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
+              >
+                {actionLoading ? (
+                  <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin" />
+                ) : confirmState.status === "approved" ? (
+                  "Yes, Approve"
+                ) : (
+                  "Yes, Reject"
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
