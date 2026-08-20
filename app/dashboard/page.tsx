@@ -108,7 +108,7 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
-const SUPER_ADMIN_CODE = "EXPERT000";
+const SUPER_ADMIN_CODE = "EFX0000";
 
 // ─── Global Helpers ──────────────────────────────────────────────────────────
 
@@ -128,13 +128,7 @@ function getRateAndMonths(branch: number): { rate: number; months: number } {
   return { rate: 0.08, months: 24 };
 }
 
-/** Optional debug helper – uncomment and call to log tree data */
-// function debugTree(node: UserNode, prefix = "") {
-//   const branch = computeBranchInvestment(node);
-//   const { rate } = getRateAndMonths(branch);
-//   console.log(`${prefix}${node.name} (${node.userCode}) – Personal: ${node.paymentSummary.totalInvested}, Branch: ${branch}, Rate: ${(rate*100).toFixed(0)}%`);
-//   node.children.forEach(child => debugTree(child, prefix + "  "));
-// }
+
 
 function getStatusConfig(status: string) {
   switch (status) {

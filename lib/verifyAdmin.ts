@@ -2,9 +2,9 @@ import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 import User from "@/lib/models/User";
 
-const SUPER_ADMIN_CODE = "EXPERT000";
+const SUPER_ADMIN_CODE = "EFX0000";
 
-// ✅ यह फंक्शन किसी भी नाम (id, _id, userId) से ID निकाल लेगा
+
 function getUserIdFromPayload(decoded: any): string | null {
   return decoded?.id || decoded?._id || decoded?.userId || decoded?.user_id || null;
 }

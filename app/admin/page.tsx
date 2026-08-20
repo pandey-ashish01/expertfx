@@ -33,7 +33,7 @@ export default function AdminPage() {
     if (!user || !token) { router.push("/login"); return; }
 
     const parsed = JSON.parse(user);
-    if (parsed.userCode !== "ZENO000") {
+    if (parsed.userCode !== "EFX0000") {
       router.push("/dashboard");
       return;
     }
@@ -107,7 +107,7 @@ export default function AdminPage() {
           </div>
           <div>
             <h1 className="font-black text-lg">Super Admin</h1>
-            <p className="text-xs text-amber-400">ZENO000 · SUMANTA NANDI</p>
+            <p className="text-xs text-amber-400">EFXO000 · SUMANTA NANDI</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
