@@ -109,18 +109,21 @@ const SUPER_ADMIN_CODE = "EFX0000";
 
 // ─── Global Helpers ──────────────────────────────────────────────────────────
 
+// Fixed rate/tenure applied to every user, regardless of branch investment.
+// (Previously this was a tiered getRateAndMonths(branch) function with
+// 8% / 10% / 12% breakpoints at 500 and 2000 USDT. That tiered logic had
+// no basis in the documented profit-distribution model and has been
+// removed. Adjust these two constants if the business ever defines a
+// real, documented rate rule.)
+const FIXED_RATE = 0.08;
+const FIXED_MONTHS = 25;
+
 function computeBranchInvestment(node: UserNode): number {
   let sum = node.paymentSummary.totalInvested;
   for (const child of node.children) {
     sum += computeBranchInvestment(child);
   }
   return sum;
-}
-
-function getRateAndMonths(branch: number): { rate: number; months: number } {
-  if (branch >= 2000) return { rate: 0.12, months: 36 };
-  if (branch >= 500)  return { rate: 0.10, months: 30 };
-  return { rate: 0.08, months: 24 };
 }
 
 function getStatusConfig(status: string) {
@@ -377,11 +380,6 @@ function AdminPanel({
                   <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
                     {new Date(payment.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
-                  {payment.monthlyRate && (
-                    <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-                      {(payment.monthlyRate * 100).toFixed(1)}% · {payment.maxMonths || 25}mo
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -517,18 +515,6 @@ function AdminPanel({
                     {new Date(viewPayment.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
-                {viewPayment.monthlyRate !== undefined && (
-                  <div>
-                    <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Monthly Rate</p>
-                    <p className="font-semibold text-sm">{(viewPayment.monthlyRate * 100).toFixed(1)}%</p>
-                  </div>
-                )}
-                {viewPayment.maxMonths !== undefined && (
-                  <div>
-                    <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>Duration</p>
-                    <p className="font-semibold text-sm">{viewPayment.maxMonths} months</p>
-                  </div>
-                )}
                 <div className="col-span-2">
                   <p className={`text-xs mb-1 flex items-center gap-1 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}><Hash className="w-3 h-3" /> Payment ID</p>
                   <p className="font-mono text-xs break-all">{viewPayment._id}</p>
@@ -834,7 +820,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
     const isRoot      = node.level === 0;
     const ps          = node.paymentSummary;
     const branchTotal = computeBranchInvestment(node);
-    const { rate }    = getRateAndMonths(branchTotal);
+    // Rate/tenure badge intentionally removed — see FIXED_RATE/FIXED_MONTHS note above.
 
     return (
       <div key={node._id} className="mb-2">
@@ -860,13 +846,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
                 <p className="font-bold text-sm md:text-base truncate">{node.name}</p>
                 {isRoot && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">YOU</span>}
                 {node.userCode && <span className="font-mono text-xs text-red-400 flex-shrink-0">{node.userCode}</span>}
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                  rate === 0.12 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
-                  rate === 0.10 ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
-                  "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                }`}>
-                  {(rate * 100).toFixed(0)}%
-                </span>
+                {/* Rate badge removed — was an undocumented branch-threshold display (8% / 10% / 12%). */}
               </div>
               <p className={`text-xs md:text-sm truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{node.mobile}</p>
             </div>
@@ -908,7 +888,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
     (node.children?.length || 0) + (node.children?.reduce((s, c) => s + countAll(c), 0) || 0);
   const totalMembers = countAll(hierarchyData);
   const rootBranch = computeBranchInvestment(hierarchyData);
-  const rootRate = getRateAndMonths(rootBranch).rate;
+  // "Your Rate" stat removed along with the rate-tier badge — see note above.
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
@@ -926,7 +906,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+      <div className="grid grid-cols-3 gap-2 md:gap-3">
         <div className={`${card} p-3 md:p-4`}>
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Personal</p>
           <p className="text-base xs:text-lg md:text-xl font-black text-blue-400">{hierarchyData.paymentSummary.totalInvested} USDT</p>
@@ -939,10 +919,7 @@ function NetworkPanel({ userId, isDarkMode, card }: { userId: string; isDarkMode
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Branch (Total)</p>
           <p className="text-base xs:text-lg md:text-xl font-black text-purple-400">{rootBranch} USDT</p>
         </div>
-        <div className={`${card} p-3 md:p-4`}>
-          <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Your Rate</p>
-          <p className="text-base xs:text-lg md:text-xl font-black text-amber-400">{(rootRate * 100).toFixed(0)}%</p>
-        </div>
+        {/* "Your Rate" stat card removed — rate-tier display is no longer shown anywhere in this panel. */}
       </div>
 
       <div className={`${card} p-2.5 xs:p-3 md:p-5`}>{renderNode(hierarchyData)}</div>
@@ -1234,7 +1211,7 @@ function Membership({ userId, isDarkMode, card }: { userId: string; isDarkMode: 
                 })}
               </tbody>
               <tfoot>
-                <tr className={`text-xs font-bold border-t-2 ${isDarkMode ? "border-white/10 bg-white/3 text-gray-300" : "border-gray-200 bg-gray-50 text-gray-700"}`}>
+                <tr className={`text-xs font-bold border-t-2 ${isDarkMode ? "border-white/10 bg-white/3 text-gray-200" : "border-gray-200 bg-gray-50 text-gray-800"}`}>
                   <td className="px-4 py-3" colSpan={2}>Total</td>
                   <td className="hidden md:table-cell"></td>
                   <td className="hidden md:table-cell"></td>
@@ -1492,8 +1469,8 @@ export default function DashboardPage() {
     amount: "",
     description: "",
     screenshot: null,
-    monthlyRate: 0.08,   // fallback, will be overridden
-    maxMonths: 25,
+    monthlyRate: FIXED_RATE,
+    maxMonths: FIXED_MONTHS,
   });
 
   const [treeData, setTreeData] = useState<UserNode | null>(null);
@@ -1632,19 +1609,20 @@ export default function DashboardPage() {
     }
   };
 
-  // ── When custom form opens, update its default rate ─────────────────────
+  // ── When custom form opens, default to the fixed rate/tenure ────────────
+  // (Previously this recalculated rate/months from live branch investment
+  // via getRateAndMonths(). That tiered logic is removed; every user now
+  // gets the same FIXED_RATE / FIXED_MONTHS.)
 
   useEffect(() => {
-    if (showAddPayment && treeData) {
-      const branch = computeBranchInvestment(treeData);
-      const { rate, months } = getRateAndMonths(branch);
+    if (showAddPayment) {
       setPaymentForm(prev => ({
         ...prev,
-        monthlyRate: rate,
-        maxMonths: months,
+        monthlyRate: FIXED_RATE,
+        maxMonths: FIXED_MONTHS,
       }));
     }
-  }, [showAddPayment, treeData]);
+  }, [showAddPayment]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -1690,7 +1668,7 @@ export default function DashboardPage() {
       }
       if (data.success) {
         toast.success(`Investment submitted! ${data.data.note || ""}`);
-        setPaymentForm({ amount: "", description: "", screenshot: null, monthlyRate: 0.08, maxMonths: 25 });
+        setPaymentForm({ amount: "", description: "", screenshot: null, monthlyRate: FIXED_RATE, maxMonths: FIXED_MONTHS });
         setShowAddPayment(false);
         fetchPayments(user._id);
         fetchTreeData(user._id);
@@ -2083,7 +2061,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {approvedPayments.slice(0, 3).map(payment => {
                   const calc     = payment.investmentCalc;
-                  const maxMo    = payment.maxMonths ?? 25;
+                  const maxMo    = payment.maxMonths ?? FIXED_MONTHS;
                   const progress = calc ? Math.min((calc.daysElapsed / (maxMo * 30)) * 100, 100) : 0;
                   return (
                     <div key={payment._id} className={`p-3 md:p-4 rounded-xl ${isDarkMode ? "bg-white/5" : "bg-gray-50"}`}>
@@ -2159,11 +2137,10 @@ export default function DashboardPage() {
   function renderInvestments() {
     const amountVal = parseFloat(paymentForm.amount) || 0;
 
-    let branchTotal = 0;
-    if (treeData && !treeLoading) {
-      branchTotal = computeBranchInvestment(treeData);
-    }
-    const { rate: dynamicRate, months: dynamicMonths } = getRateAndMonths(branchTotal);
+    // Every plan now uses the same fixed rate/tenure — no more per-branch
+    // recalculation via getRateAndMonths(branchTotal).
+    const dynamicRate = FIXED_RATE;
+    const dynamicMonths = FIXED_MONTHS;
 
     const plans = [
       { amount: 100, label: "Starter", tagline: "Try it out", badge: "OFFER", icon: Sparkles, accent: "from-amber-400 to-orange-500", glow: "shadow-[0_8px_24px_-8px_rgba(251,191,36,0.35)]", glowHover: "hover:shadow-[0_12px_32px_-8px_rgba(251,191,36,0.5)]", ring: "hover:ring-amber-400/40", features: ["Instant activation", "Daily payout", `${dynamicMonths} months validity`, "Referral bonus"], highlight: false },
